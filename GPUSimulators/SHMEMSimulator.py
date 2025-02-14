@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import logging
 from GPUSimulators import Simulator, CudaContext
 import numpy as np
@@ -27,6 +26,7 @@ import numpy as np
 import pycuda.driver as cuda
 
 import time
+
 
 class SHMEMSimulator(Simulator.BaseSimulator):
     """

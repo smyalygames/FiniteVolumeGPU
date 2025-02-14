@@ -41,10 +41,6 @@ import pycuda.driver as cuda
 from pycuda.tools import PageLockedMemoryPool
 
 
-
-
-
-
 def safeCall(cmd):
     logger = logging.getLogger(__name__)
     try:
@@ -65,16 +61,20 @@ def safeCall(cmd):
 
     return stdout
 
+
 def getGitHash():
     return safeCall(["git", "rev-parse", "HEAD"])
 
+
 def getGitStatus():
     return safeCall(["git", "status", "--porcelain", "-uno"])
+
 
 def toJson(in_dict, compressed=True):
     """
     Creates JSON string from a dictionary
     """
+
     logger = logging.getLogger(__name__)
     out_dict = in_dict.copy()
     for key in out_dict:
@@ -89,12 +89,14 @@ def toJson(in_dict, compressed=True):
                 out_dict[key] = value
     return json.dumps(out_dict)
 
+
 def runSimulation(simulator, simulator_args, outfile, save_times, save_var_names=[], dt=None):
     """
     Runs a simulation, and stores output in netcdf file. Stores the times given in 
     save_times, and saves all of the variables in list save_var_names. Elements in  
     save_var_names can be set to None if you do not want to save them
     """
+
     profiling_data_sim_runner = { 'start': {}, 'end': {} }
     profiling_data_sim_runner["start"]["t_sim_init"] = 0
     profiling_data_sim_runner["end"]["t_sim_init"] = 0
@@ -208,14 +210,11 @@ def runSimulation(simulator, simulator_args, outfile, save_times, save_var_names
     return outdata.filename, profiling_data_sim_runner, sim.profiling_data_mpi
 
 
-
-
-
-
 class Timer(object):
     """
     Class which keeps track of time spent for a section of code
     """
+
     def __init__(self, tag, log_level=logging.DEBUG):
         self.tag = tag
         self.log_level = log_level
@@ -233,16 +232,14 @@ class Timer(object):
 
     def elapsed(self):
         return time.time() - self.start
-            
-            
-            
-            
+
 
 class PopenFileBuffer(object):
     """
     Simple class for holding a set of tempfiles
     for communicating with a subprocess
     """
+
     def __init__(self):
         self.stdout = tempfile.TemporaryFile(mode='w+t')
         self.stderr = tempfile.TemporaryFile(mode='w+t')
@@ -262,10 +259,12 @@ class PopenFileBuffer(object):
 
         return cout, cerr
 
+
 class IPEngine(object):
     """
     Class for starting IPEngines for MPI processing in IPython
     """
+
     def __init__(self, n_engines):
         self.logger = logging.getLogger(__name__)
         
@@ -352,10 +351,6 @@ class IPEngine(object):
             self.c_buff = None
         
             gc.collect()
-        
-
-            
-        
 
 
 class DataDumper(object):
@@ -366,6 +361,7 @@ class DataDumper(object):
     with DataDumper("filename") as data:
         ...
     """
+
     def __init__(self, filename, *args, **kwargs):
         self.logger = logging.getLogger(__name__)
         
@@ -400,7 +396,6 @@ class DataDumper(object):
         #Log output
         self.logger.info("Initialized " + self.filename)
         
-        
     def __enter__(self):
         self.logger.info("Opening " + self.filename)
         if (self.args):
@@ -413,7 +408,6 @@ class DataDumper(object):
     def __exit__(self, *args):
         self.logger.info("Closing " + self.filename)
         self.ncfile.close()
-        
         
     def toJson(in_dict):
         out_dict = in_dict.copy()
@@ -428,15 +422,13 @@ class DataDumper(object):
                     out_dict[key] = str(out_dict[key])
 
         return json.dumps(out_dict)
-        
 
 
-        
-        
 class ProgressPrinter(object):
     """
     Small helper class for 
     """
+
     def __init__(self, total_steps, print_every=5):
         self.logger = logging.getLogger(__name__)
         self.start = time.time()
@@ -487,19 +479,16 @@ class ProgressPrinter(object):
         return progressbar
 
 
-
-
-
-
-
-"""
-Class that holds 2D data 
-"""
 class CudaArray2D:
     """
-    Uploads initial data to the CUDA device
+    Class that holds 2D data 
     """
+
     def __init__(self, stream, nx, ny, x_halo, y_halo, cpu_data=None, dtype=np.float32):
+        """
+        Uploads initial data to the CUDA device
+        """
+
         self.logger =  logging.getLogger(__name__)
         self.nx = nx
         self.ny = ny
@@ -531,16 +520,16 @@ class CudaArray2D:
         self.upload(stream, cpu_data, extent=[x, y, cpu_data.shape[1], cpu_data.shape[0]])
         #self.logger.debug("Buffer <%s> [%dx%d]: Allocated ", int(self.data.gpudata), self.nx, self.ny)
         
-        
     def __del__(self, *args):
         #self.logger.debug("Buffer <%s> [%dx%d]: Releasing ", int(self.data.gpudata), self.nx, self.ny)
         self.data.gpudata.free()
         self.data = None
-        
-    """
-    Enables downloading data from GPU to Python
-    """
+
     def download(self, stream, cpu_data=None, asynch=False, extent=None):
+        """
+        Enables downloading data from GPU to Python
+        """
+
         if (extent is None):
             x = self.x_halo
             y = self.y_halo
@@ -583,7 +572,6 @@ class CudaArray2D:
         
         return cpu_data
         
-        
     def upload(self, stream, cpu_data, extent=None):
         if (extent is None):
             x = self.x_halo
@@ -615,21 +603,17 @@ class CudaArray2D:
         
         copy(stream)
 
-        
-        
-        
-        
-        
-        
-        
-"""
-Class that holds 2D data 
-"""
+
 class CudaArray3D:
     """
-    Uploads initial data to the CL device
+    Class that holds 3D data 
     """
+
     def __init__(self, stream, nx, ny, nz, x_halo, y_halo, z_halo, cpu_data=None, dtype=np.float32):
+        """
+        Uploads initial data to the CL device
+        """
+
         self.logger =  logging.getLogger(__name__)
         self.nx = nx
         self.ny = ny
@@ -688,16 +672,16 @@ class CudaArray3D:
         
         #self.logger.debug("Buffer <%s> [%dx%d]: Allocated ", int(self.data.gpudata), self.nx, self.ny)
         
-        
     def __del__(self, *args):
         #self.logger.debug("Buffer <%s> [%dx%d]: Releasing ", int(self.data.gpudata), self.nx, self.ny)
         self.data.gpudata.free()
         self.data = None
         
-    """
-    Enables downloading data from GPU to Python
-    """
     def download(self, stream, asynch=False):
+        """
+        Enables downloading data from GPU to Python
+        """
+
         #self.logger.debug("Downloading [%dx%d] buffer", self.nx, self.ny)
         #Allocate host memory
         #cpu_data = cuda.pagelocked_empty((self.ny, self.nx), np.float32)
@@ -727,18 +711,12 @@ class CudaArray3D:
         
         return cpu_data
 
-        
-        
-        
-        
-        
-        
-        
-        
-"""
-A class representing an Arakawa A type (unstaggered, logically Cartesian) grid
-"""
+
 class ArakawaA2D:
+    """
+    A class representing an Arakawa A type (unstaggered, logically Cartesian) grid
+    """
+
     def __init__(self, stream, nx, ny, halo_x, halo_y, cpu_variables):
         """
         Uploads initial data to the GPU device

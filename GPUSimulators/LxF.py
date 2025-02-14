@@ -21,43 +21,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 #Import packages we need
-from GPUSimulators import Simulator, Common
+from GPUSimulators import CudaContext, Simulator, Common
 from GPUSimulators.Simulator import BaseSimulator, BoundaryCondition
 import numpy as np
 
 from pycuda import gpuarray
 
 
-
-
-
-
-"""
-Class that solves the SW equations using the Lax Friedrichs scheme
-"""
 class LxF (Simulator.BaseSimulator):
+    """
+    Class that solves the SW equations using the Lax Friedrichs scheme
+    """
 
-    """
-    Initialization routine
-    h0: Water depth incl ghost cells, (nx+1)*(ny+1) cells
-    hu0: Initial momentum along x-axis incl ghost cells, (nx+1)*(ny+1) cells
-    hv0: Initial momentum along y-axis incl ghost cells, (nx+1)*(ny+1) cells
-    nx: Number of cells along x-axis
-    ny: Number of cells along y-axis
-    dx: Grid cell spacing along x-axis (20 000 m)
-    dy: Grid cell spacing along y-axis (20 000 m)
-    dt: Size of each timestep (90 s)
-    g: Gravitational accelleration (9.81 m/s^2)
-    """
     def __init__(self, 
-                 context, 
-                 h0, hu0, hv0, 
-                 nx, ny, 
-                 dx, dy, 
-                 g, 
-                 cfl_scale=0.9,
+                 context: CudaContext, 
+                 h0: float, hu0: float, hv0: float, 
+                 nx: int, ny: int, 
+                 dx: int, dy: int, 
+                 g: float, 
+                 cfl_scale: float=0.9,
                  boundary_conditions=BoundaryCondition(),
-                 block_width=16, block_height=16):
+                 block_width: int=16, block_height: int=16):
+        """
+        Initialization routine
+
+        Args:
+            h0: Water depth incl ghost cells, (nx+1)*(ny+1) cells
+            hu0: Initial momentum along x-axis incl ghost cells, (nx+1)*(ny+1) cells
+            hv0: Initial momentum along y-axis incl ghost cells, (nx+1)*(ny+1) cells
+            nx: Number of cells along x-axis
+            ny: Number of cells along y-axis
+            dx: Grid cell spacing along x-axis (20 000 m)
+            dy: Grid cell spacing along y-axis (20 000 m)
+            dt: Size of each timestep (90 s)
+            g: Gravitational accelleration (9.81 m/s^2)
+        """
                  
         # Call super constructor
         super().__init__(context, 
@@ -66,7 +64,7 @@ class LxF (Simulator.BaseSimulator):
             boundary_conditions,
             cfl_scale,
             1,
-            block_width, block_height);
+            block_width, block_height)
         self.g = np.float32(g) 
 
         # Get kernels
@@ -99,6 +97,11 @@ class LxF (Simulator.BaseSimulator):
         self.cfl_data.fill(dt, stream=self.stream)
         
     def substep(self, dt, step_number):
+        """
+        Args:
+            dt: Size of each timestep (seconds)
+        """
+        
         self.kernel.prepared_async_call(self.grid_size, self.block_size, self.stream, 
                 self.nx, self.ny, 
                 self.dx, self.dy, dt, 

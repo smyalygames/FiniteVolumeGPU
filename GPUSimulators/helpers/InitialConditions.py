@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 from GPUSimulators.Simulator import BoundaryCondition
 import numpy as np
 import gc
@@ -73,10 +72,7 @@ def downsample(highres_solution, x_factor, y_factor=None):
     return highres_solution.reshape([int(ny), int(y_factor), int(nx), int(x_factor)]).mean(3).mean(1)
 
 
-
-
-    
-def bump(nx, ny, width, height, 
+def bump(nx: int, ny: int, width: int, height: int, 
         bump_size=None, 
         ref_nx=None, ref_ny=None,
         x_center=0.5, y_center=0.5,
@@ -189,12 +185,7 @@ def genShockBubble(nx, ny, gamma, grid=None):
     } 
     return arguments
 
-    
-    
-    
-    
-    
-    
+
 def genKelvinHelmholtz(nx, ny, gamma, roughness=0.125, grid=None, index=None):
     """
     Roughness parameter in (0, 1.0] determines how "squiggly" 
@@ -205,6 +196,7 @@ def genKelvinHelmholtz(nx, ny, gamma, roughness=0.125, grid=None, index=None):
         """
         Generates the zones of the two fluids of K-H
         """
+
         zone = np.zeros((ny, nx), dtype=np.int32)
 
 
@@ -298,13 +290,13 @@ def genKelvinHelmholtz(nx, ny, gamma, roughness=0.125, grid=None, index=None):
     } 
     
     return arguments
-    
-    
-    
+ 
+
 def genRayleighTaylor(nx, ny, gamma, version=0, grid=None):
     """
     Generates Rayleigh-Taylor instability case
     """
+
     width = 0.5
     height = 1.5
     g = 0.1

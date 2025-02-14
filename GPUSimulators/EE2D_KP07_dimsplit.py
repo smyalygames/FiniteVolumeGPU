@@ -27,33 +27,11 @@ import numpy as np
 from pycuda import gpuarray
 
 
-        
-        
-        
-        
-        
-
-
-"""
-Class that solves the SW equations using the Forward-Backward linear scheme
-"""
 class EE2D_KP07_dimsplit (BaseSimulator):
+    """
+    Class that solves the SW equations using the Forward-Backward linear scheme
+    """
 
-    """
-    Initialization routine
-    rho: Density
-    rho_u: Momentum along x-axis
-    rho_v: Momentum along y-axis
-    E: energy
-    nx: Number of cells along x-axis
-    ny: Number of cells along y-axis
-    dx: Grid cell spacing along x-axis
-    dy: Grid cell spacing along y-axis
-    dt: Size of each timestep 
-    g: Gravitational constant
-    gamma: Gas constant
-    p: pressure
-    """
     def __init__(self, 
                  context, 
                  rho, rho_u, rho_v, E, 
@@ -65,7 +43,24 @@ class EE2D_KP07_dimsplit (BaseSimulator):
                  cfl_scale=0.9,
                  boundary_conditions=BoundaryCondition(), 
                  block_width=16, block_height=8):
-                 
+        """
+        Initialization routine
+
+        Args:
+            rho: Density
+            rho_u: Momentum along x-axis
+            rho_v: Momentum along y-axis
+            E: energy
+            nx: Number of cells along x-axis
+            ny: Number of cells along y-axis
+            dx: Grid cell spacing along x-axis
+            dy: Grid cell spacing along y-axis
+            dt: Size of each timestep 
+            g: Gravitational constant
+            gamma: Gas constant
+            p: pressure
+        """
+                    
         # Call super constructor
         super().__init__(context, 
             nx, ny, 
@@ -107,7 +102,6 @@ class EE2D_KP07_dimsplit (BaseSimulator):
         dt_y = np.min(self.dy / (np.abs(rho_v/rho) + np.sqrt(gamma*rho)))
         self.dt = min(dt_x, dt_y)
         self.cfl_data.fill(self.dt, stream=self.stream)
-                        
     
     def substep(self, dt, step_number, external=True, internal=True):
             self.substepDimsplit(0.5*dt, step_number, external, internal)

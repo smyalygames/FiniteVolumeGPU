@@ -28,8 +28,8 @@ from socket import gethostname
 
 import pycuda.driver as cuda
 
-
 from GPUSimulators import Common, Simulator, CudaContext
+
 
 class Autotuner:
     def __init__(self, 
@@ -43,7 +43,6 @@ class Autotuner:
         self.block_widths = block_widths
         self.block_heights = block_heights
         self.performance = {}
-
 
     def benchmark(self, simulator, force=False):
         logger = logging.getLogger(__name__)
@@ -95,13 +94,12 @@ class Autotuner:
         # Save to file
         np.savez_compressed(self.filename, **benchmark_data)
 
-
-            
-    """
-    Function which reads a numpy file with autotuning data
-    and reports the maximum performance and block size
-    """
     def get_peak_performance(self, simulator):
+        """
+        Function which reads a numpy file with autotuning data
+        and reports the maximum performance and block size
+        """
+
         logger = logging.getLogger(__name__)
         
         assert issubclass(simulator, Simulator.BaseSimulator)
@@ -140,13 +138,12 @@ class Autotuner:
             #This should never happen
             raise "Something wrong: Could not get autotuning data!"
             return None
-        
-        
-                
-    """
-    Runs a set of benchmarks for a single simulator
-    """
+    
     def benchmark_single_simulator(simulator, arguments, block_widths, block_heights):
+        """
+        Runs a set of benchmarks for a single simulator
+        """
+
         logger = logging.getLogger(__name__)
         
         megacells = np.empty((len(block_heights), len(block_widths)))
@@ -168,11 +165,11 @@ class Autotuner:
 
         return megacells
             
-            
-    """
-    Runs a benchmark, and returns the number of megacells achieved
-    """
     def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
+        """
+        Runs a benchmark, and returns the number of megacells achieved
+        """
+
         logger = logging.getLogger(__name__)
         
         #Initialize simulator
@@ -218,12 +215,11 @@ class Autotuner:
             logger.debug("%s [%d x %d] failed: gpu elapsed %f", simulator.__name__, arguments["block_width"], arguments["block_height"], gpu_elapsed)
             return np.nan
         
-        
-        
-    """
-    Generates test dataset
-    """
     def gen_test_data(nx, ny, g):
+        """
+        Generates test dataset
+        """
+
         width = 100.0
         height = 100.0
         dx = width / float(nx)
@@ -264,10 +260,11 @@ class Autotuner:
         
         return h, hu, hv, dx, dy, dt
         
-    """
-    Checks that a variable is "sane"
-    """
     def sanity_check(variable, bound_min, bound_max):
+        """
+        Checks that a variable is "sane"
+        """
+
         maxval = np.amax(variable)
         minval = np.amin(variable)
         if (np.isnan(maxval) 

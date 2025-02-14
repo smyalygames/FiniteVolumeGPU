@@ -29,23 +29,20 @@ import pycuda.compiler as cuda_compiler
 import pycuda.gpuarray
 import pycuda.driver as cuda
 
-from GPUSimulators import Common
-
-
-        
+from GPUSimulators import Common, CudaContext
 
 
 class BoundaryCondition(object):    
     """
     Class for holding boundary conditions for global boundaries
     """
-    
-    
+
     class Type(IntEnum):
         """
         Enum that describes the different types of boundary conditions
         WARNING: MUST MATCH THAT OF common.h IN CUDA
         """
+
         Dirichlet = 0,
         Neumann = 1,
         Periodic = 2,
@@ -60,6 +57,7 @@ class BoundaryCondition(object):
         """
         Constructor
         """
+
         self.north = types['north']
         self.south = types['south']
         self.east = types['east']
@@ -74,11 +72,11 @@ class BoundaryCondition(object):
     def __str__(self):
         return  '[north={:s}, south={:s}, east={:s}, west={:s}]'.format(str(self.north), str(self.south), str(self.east), str(self.west))
 
-        
     def asCodedInt(self):
         """
         Helper function which packs four boundary conditions into one integer
         """
+
         bc = 0
         bc = bc | (self.north & 0x0000000F) << 24
         bc = bc | (self.south & 0x0000000F) << 16
@@ -98,39 +96,36 @@ class BoundaryCondition(object):
         types['east']  = BoundaryCondition.Type((bc >>  8) & 0x0000000F)
         types['west']  = BoundaryCondition.Type((bc >>  0) & 0x0000000F)
         return types
-        
-    
-    
-    
-    
-    
-    
-    
+
+
 class BaseSimulator(object):
    
     def __init__(self, 
-                 context, 
-                 nx, ny, 
-                 dx, dy, 
-                 boundary_conditions,
-                 cfl_scale,
-                 num_substeps,
-                 block_width, block_height):
+                 context: CudaContext, 
+                 nx: int, ny: int, 
+                 dx: int, dy: int, 
+                 boundary_conditions: BoundaryCondition,
+                 cfl_scale: float,
+                 num_substeps: int,
+                 block_width: int, block_height: int):
         """
         Initialization routine
-        context: GPU context to use
-        kernel_wrapper: wrapper function of GPU kernel
-        h0: Water depth incl ghost cells, (nx+1)*(ny+1) cells
-        hu0: Initial momentum along x-axis incl ghost cells, (nx+1)*(ny+1) cells
-        hv0: Initial momentum along y-axis incl ghost cells, (nx+1)*(ny+1) cells
-        nx: Number of cells along x-axis
-        ny: Number of cells along y-axis
-        dx: Grid cell spacing along x-axis (20 000 m)
-        dy: Grid cell spacing along y-axis (20 000 m)
-        dt: Size of each timestep (90 s)
-        cfl_scale: Courant number
-        num_substeps: Number of substeps to perform for a full step
+        
+        Args:
+            context: GPU context to use
+            kernel_wrapper: wrapper function of GPU kernel
+            h0: Water depth incl ghost cells, (nx+1)*(ny+1) cells
+            hu0: Initial momentum along x-axis incl ghost cells, (nx+1)*(ny+1) cells
+            hv0: Initial momentum along y-axis incl ghost cells, (nx+1)*(ny+1) cells
+            nx: Number of cells along x-axis
+            ny: Number of cells along y-axis
+            dx: Grid cell spacing along x-axis (20 000 m)
+            dy: Grid cell spacing along y-axis (20 000 m)
+            dt: Size of each timestep (90 s)
+            cfl_scale: Courant number
+            num_substeps: Number of substeps to perform for a full step
         """
+
         #Get logger
         self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
         
@@ -147,7 +142,7 @@ class BaseSimulator(object):
         self.num_substeps = num_substeps
         
         #Handle autotuning block size
-        if (self.context.autotuner):
+        if self.context.autotuner:
             peak_configuration = self.context.autotuner.get_peak_performance(self.__class__)
             block_width = int(peak_configuration["block_width"])
             block_height = int(peak_configuration["block_height"])
@@ -167,11 +162,9 @@ class BaseSimulator(object):
         #Keep track of simulation time and number of timesteps
         self.t = 0.0
         self.nt = 0
-        
 
     def __str__(self):
         return "{:s} [{:d}x{:d}]".format(self.__class__.__name__, self.nx, self.ny)
-
 
     def simulate(self, t, dt=None):
         """ 
@@ -216,11 +209,14 @@ class BaseSimulator(object):
                     e.args += ("Step={:d}, time={:f}".format(self.simSteps(), self.simTime()),)
                     raise
 
-
-    def step(self, dt):
+    def step(self, dt: int):
         """
         Function which performs one single timestep of size dt
+        
+        Args:
+            dt: Size of each timestep (seconds)
         """
+
         for i in range(self.num_substeps):
             self.substep(dt, i)
             
@@ -253,6 +249,7 @@ class BaseSimulator(object):
         """
         Function which performs one single substep with stepsize dt
         """
+
         raise(NotImplementedError("Needs to be implemented in subclass"))
         
     def getOutput(self):
@@ -264,23 +261,13 @@ class BaseSimulator(object):
         
     def computeDt(self):
         raise(NotImplementedError("Needs to be implemented in subclass"))
-       
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
 def stepOrderToCodedInt(step, order):
     """
     Helper function which packs the step and order into a single integer
     """
+
     step_order = (step << 16) | (order & 0x0000ffff)
     #print("Step:  {0:032b}".format(step))
     #print("Order: {0:032b}".format(order))

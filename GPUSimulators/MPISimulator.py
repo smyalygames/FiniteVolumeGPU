@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import logging
 from GPUSimulators import Simulator
 import numpy as np
@@ -30,12 +29,12 @@ import pycuda.driver as cuda
 #import nvtx
 
 
-
 class MPIGrid(object):
     """
     Class which represents an MPI grid of nodes. Facilitates easy communication between
     neighboring nodes
     """
+
     def __init__(self, comm, ndims=2):
         self.logger =  logging.getLogger(__name__)
         
@@ -144,7 +143,6 @@ class MPIGrid(object):
         
         return grid
 
-
     def gather(self, data, root=0):
         out_data = None
         if (self.comm.rank == root):
@@ -206,6 +204,7 @@ class MPISimulator(Simulator.BaseSimulator):
     """
     Class which handles communication between simulators on different MPI nodes
     """
+
     def __init__(self, sim, grid):        
         self.profiling_data_mpi = { 'start': {}, 'end': {} }
         self.profiling_data_mpi["start"]["t_mpi_halo_exchange"] = 0
@@ -353,12 +352,12 @@ class MPISimulator(Simulator.BaseSimulator):
         self.logger.debug("Local dt: {:f}, global dt: {:f}".format(local_dt[0], global_dt[0]))
         return global_dt[0]
         
-        
     def getExtent(self):
         """
         Function which returns the extent of node with rank 
         rank in the grid
         """
+
         width = self.sim.nx*self.sim.dx
         height = self.sim.ny*self.sim.dy
         i, j = self.grid.getCoordinate()

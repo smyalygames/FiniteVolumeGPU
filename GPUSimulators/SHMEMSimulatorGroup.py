@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import logging
 from GPUSimulators import Simulator, CudaContext
 import numpy as np
@@ -27,6 +26,7 @@ import numpy as np
 import pycuda.driver as cuda
 
 import time
+
 
 class SHMEMGrid(object):
     """
@@ -156,6 +156,7 @@ class SHMEMGrid(object):
         
         return grid
 
+
 class SHMEMSimulatorGroup(object):
     """
     Class which handles communication and synchronization between simulators in different 
@@ -277,7 +278,6 @@ class SHMEMSimulatorGroup(object):
             self.s[i] = np.empty((self.nvars[i], self.read_s[i][3], self.read_s[i][2]), dtype=np.float32)
 
         self.logger.debug("Initialized {:d} subdomains".format(len(self.sims)))
-    
 
     def substep(self, dt, step_number):
         self.exchange()
