@@ -44,8 +44,10 @@ class CudaContext(object):
     def __init__(self, device=None, context_flags=None, use_cache=True, autotuning=True):
         """
         Create a new CUDA context
-        Set device to an id or pci_bus_id to select a specific GPU
-        Set context_flags to cuda.ctx_flags.SCHED_BLOCKING_SYNC for a blocking context
+
+        Args:
+            device: To use a specific GPU, provide either an ``id`` or ``pci_bus_id`` for the GPU.
+            context_flags: To set a blocking context, provide ``cuda.ctx_flags.SCHED_BLOCKING_SYNC``.
         """
 
         self.use_cache = use_cache
@@ -119,8 +121,21 @@ class CudaContext(object):
     def __str__(self):
         return "CudaContext id " + str(self.cuda_context.handle)
     
-    def hash_kernel(kernel_filename, include_dirs):        
-        # Generate a kernel ID for our caches
+    def hash_kernel(self, kernel_filename: str, include_dirs: list[str]) -> str:        
+        """
+        Generate a kernel ID for our caches.
+
+        Args:
+            kernel_filename: Path to the kernel file.
+            include_dirs: Directories to search for ``#include`` in the kernel file.
+        
+        Returns:
+            MD5 has for the kernel in the cache.
+        
+        Raises:
+            RuntimeError: When the number of ``#include``s surpassed the maximum (101) permitted ``#include``s.
+        """
+
         num_includes = 0
         max_includes = 100
         kernel_hasher = hashlib.md5()
@@ -131,7 +146,7 @@ class CudaContext(object):
         while len(files):
         
             if (num_includes > max_includes):
-                raise("Maximum number of includes reached - circular include in {:}?".format(kernel_filename))
+                raise RuntimeError("Maximum number of includes reached - circular include in {:}?".format(kernel_filename))
         
             filename = files.pop()
             
@@ -166,12 +181,23 @@ class CudaContext(object):
             
         return kernel_hasher.hexdigest()
 
-    def get_module(self, kernel_filename, 
-                    include_dirs=[], \
-                    defines={}, \
-                    compile_args={'no_extern_c', True}, jit_compile_args={}):
+    def get_module(self, kernel_filename: str, 
+                    include_dirs: list[str]=[], \
+                    defines: dict={}, \
+                    compile_args: dict={'no_extern_c': True}, jit_compile_args: dict={}) -> cuda.Module:
         """
-        Reads a text file and creates an OpenCL kernel from that
+        Reads a text file and creates an OpenCL kernel from that.
+
+        Args:
+            kernel_filename: The file to use for the kernel.
+            include_dirs: List of directories for the ``#include``s referenced.
+            defines: Adds ``#define`` tags to the kernel, such as: ``#define key value``.
+            compile_args: Adds other compiler options (parameters) for ``pycuda.compiler.compile()``.
+            jit_compile_args: Adds other just-in-time compilation options (parameters)
+                for ``pycuda.driver.module_from_buffer()``.
+        
+        Returns:
+            The kernel module (pycuda.driver.Module).
         """
 
         def cuda_compile_message_handler(compile_success_bool, info_str, error_str):
