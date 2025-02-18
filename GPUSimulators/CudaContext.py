@@ -221,7 +221,7 @@ class CudaContext(object):
         options_hash = options_hasher.hexdigest()
         
         # Create hash of kernel souce
-        source_hash = CudaContext.hash_kernel( \
+        source_hash = self.hash_kernel( \
                     kernel_path, \
                     include_dirs=[self.module_path] + include_dirs)
                     
