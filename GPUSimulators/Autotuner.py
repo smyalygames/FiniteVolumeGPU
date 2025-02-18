@@ -67,7 +67,8 @@ class Autotuner:
             'h0': h0, 'hu0': hu0, 'hv0': hv0,
             'nx': self.nx, 'ny': self.ny,
             'dx': dx, 'dy': dy, 'dt': 0.9*dt,
-            'g': g
+            'g': g,
+            'compile_opts': ['-Wno-deprecated-gpu-targets']
         } 
              
         # Load existing data into memory
@@ -178,6 +179,7 @@ class Autotuner:
         except:
             #An exception raised - not possible to continue
             logger.debug("Failed creating %s with arguments %s", simulator.__name__, str(arguments))
+            # raise RuntimeError("Failed creating %s with arguments %s", simulator.__name__, str(arguments))
             return np.nan
         
         #Create timer events
@@ -186,12 +188,12 @@ class Autotuner:
         
         #Warmup
         for i in range(warmup_timesteps):
-            sim.stepEuler(sim.dt)
+            sim.substep(sim.dt, i)
             
         #Run simulation with timer        
         start.record(sim.stream)
         for i in range(timesteps):
-            sim.stepEuler(sim.dt)
+            sim.substep(sim.dt, i)
         end.record(sim.stream)
         
         #Synchronize end event
@@ -213,6 +215,7 @@ class Autotuner:
             return megacells
         else:
             logger.debug("%s [%d x %d] failed: gpu elapsed %f", simulator.__name__, arguments["block_width"], arguments["block_height"], gpu_elapsed)
+            # raise RuntimeError("%s [%d x %d] failed: gpu elapsed %f", simulator.__name__, arguments["block_width"], arguments["block_height"], gpu_elapsed)
             return np.nan
         
     def gen_test_data(nx, ny, g):
