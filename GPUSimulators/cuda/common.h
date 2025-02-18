@@ -322,8 +322,8 @@ inline __device__ void readBlock(float* ptr_, int pitch_,
                 float Q[h+2*gc_y][w+2*gc_x], 
                 const int nx_, const int ny_,
                 const int boundary_conditions_,
-                 int x0, int y0,
-                 int x1, int y1) {
+                int x0, int y0,
+                int x1, int y1) {
     //Index of block within domain
     const int bx = blockDim.x * blockIdx.x;
     const int by = blockDim.y * blockIdx.y;

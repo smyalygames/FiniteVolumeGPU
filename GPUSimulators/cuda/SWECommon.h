@@ -477,10 +477,11 @@ __device__ float3 FORCE_1D_flux(const float3 Q_l, const float3 Q_r, const float 
 
 
 
-
-template<int w, int h, int gc_x, int gc_y, int vars>
-__device__ void writeCfl(float Q[vars][h+2*gc_y][w+2*gc_x],
-        float shmem[h+2*gc_y][w+2*gc_x],
+// TODO give better names for `Q_w` and `Q_h` in the template
+// as it probably does not reflect well on the name 
+template<int Q_w, int Q_h, int gc_x, int gc_y, int vars>
+__device__ void writeCfl(float Q[vars][Q_h+2*gc_y][Q_w+2*gc_x],
+        float shmem[Q_h+2*gc_y][Q_w+2*gc_x],
         const int nx_, const int ny_,
         const float dx_, const float dy_, const float g_,
         float* output_) {
@@ -509,7 +510,7 @@ __device__ void writeCfl(float Q[vars][h+2*gc_y][w+2*gc_x],
     if (ti < nx_+gc_x && tj < ny_+gc_y) {
         if (ty == gc_y) {
             float min_val = shmem[ty][tx];
-            const int max_y = min(h, ny_+gc_y - tj);
+            const int max_y = min(Q_h, ny_+gc_y - tj);
             for (int j=gc_y; j<max_y+gc_y; j++) {
                 min_val = fminf(min_val, shmem[j][tx]);
             }
@@ -521,7 +522,7 @@ __device__ void writeCfl(float Q[vars][h+2*gc_y][w+2*gc_x],
     //One thread loops over first row to find global max
     if (tx == gc_x && ty == gc_y) {
         float min_val = shmem[ty][tx];
-        const int max_x = min(w, nx_+gc_x - ti);
+        const int max_x = min(Q_w, nx_+gc_x - ti);
         for (int i=gc_x; i<max_x+gc_x; ++i) {
             min_val = fminf(min_val, shmem[ty][i]);
         }

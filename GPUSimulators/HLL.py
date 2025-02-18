@@ -40,7 +40,9 @@ class HLL (Simulator.BaseSimulator):
                  g, 
                  cfl_scale=0.9,
                  boundary_conditions=BoundaryCondition(), 
-                 block_width=16, block_height=16):
+                 block_width=16, block_height=16,
+                 dt: float=None,
+                 compile_opts: list[str]=[]):
         """
         Initialization routine
 
@@ -54,6 +56,7 @@ class HLL (Simulator.BaseSimulator):
             dy: Grid cell spacing along y-axis (20 000 m)
             dt: Size of each timestep (90 s)
             g: Gravitational accelleration (9.81 m/s^2)
+            compile_opts: Pass a list of nvcc compiler options
         """
                  
         # Call super constructor
@@ -74,11 +77,11 @@ class HLL (Simulator.BaseSimulator):
                                         }, 
                                         compile_args={
                                             'no_extern_c': True,
-                                            'options': ["--use_fast_math"], 
+                                            'options': ["--use_fast_math"] + compile_opts, 
                                         }, 
                                         jit_compile_args={})
         self.kernel = module.get_function("HLLKernel")
-        self.kernel.prepare("iiffffiPiPiPiPiPiPiP")
+        self.kernel.prepare("iiffffiPiPiPiPiPiPiPiiii")
     
         #Create data by uploading to device
         self.u0 = Common.ArakawaA2D(self.stream, 
@@ -90,10 +93,14 @@ class HLL (Simulator.BaseSimulator):
                         1, 1, 
                         [None, None, None])
         self.cfl_data = gpuarray.GPUArray(self.grid_size, dtype=np.float32)
-        dt_x = np.min(self.dx / (np.abs(hu0/h0) + np.sqrt(g*h0)))
-        dt_y = np.min(self.dy / (np.abs(hv0/h0) + np.sqrt(g*h0)))
-        dt = min(dt_x, dt_y)
-        self.cfl_data.fill(dt, stream=self.stream)
+        if dt == None:
+            dt_x = np.min(self.dx / (np.abs(hu0/h0) + np.sqrt(g*h0)))
+            dt_y = np.min(self.dy / (np.abs(hv0/h0) + np.sqrt(g*h0)))
+            self.dt = min(dt_x, dt_y)
+        else:
+            self.dt = dt
+        
+        self.cfl_data.fill(self.dt, stream=self.stream)
         
     def substep(self, dt, step_number):
         self.kernel.prepared_async_call(self.grid_size, self.block_size, self.stream, 
@@ -107,7 +114,9 @@ class HLL (Simulator.BaseSimulator):
                 self.u1[0].data.gpudata, self.u1[0].data.strides[0], 
                 self.u1[1].data.gpudata, self.u1[1].data.strides[0], 
                 self.u1[2].data.gpudata, self.u1[2].data.strides[0],
-                self.cfl_data.gpudata)
+                self.cfl_data.gpudata,
+                0, 0,
+                self.nx, self.ny)
         self.u0, self.u1 = self.u1, self.u0
         
     def getOutput(self):

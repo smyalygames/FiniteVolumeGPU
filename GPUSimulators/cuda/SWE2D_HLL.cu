@@ -116,7 +116,17 @@ __global__ void HLLKernel(
         float* hv1_ptr_, int hv1_pitch_,
         
         //Output CFL
-        float* cfl_) {
+        float* cfl_,
+
+        //Subarea of internal domain to compute
+        int x0=0, int y0=0,
+        int x1=0, int y1=0) {
+
+    if(x1 == 0)
+        x1 = nx_;
+
+    if(y1 == 0)
+        y1 = ny_;
     
     const unsigned int w = BLOCK_WIDTH;
     const unsigned int h = BLOCK_HEIGHT;
@@ -129,9 +139,9 @@ __global__ void HLLKernel(
     __shared__ float F[vars][h+2*gc_y][w+2*gc_x];
     
     //Read into shared memory
-    readBlock<w, h, gc_x, gc_y,  1,  1>( h0_ptr_,  h0_pitch_, Q[0], nx_, ny_, boundary_conditions_);
-    readBlock<w, h, gc_x, gc_y, -1,  1>(hu0_ptr_, hu0_pitch_, Q[1], nx_, ny_, boundary_conditions_);
-    readBlock<w, h, gc_x, gc_y,  1, -1>(hv0_ptr_, hv0_pitch_, Q[2], nx_, ny_, boundary_conditions_);
+    readBlock<w, h, gc_x, gc_y,  1,  1>( h0_ptr_,  h0_pitch_, Q[0], nx_, ny_, boundary_conditions_, x0, y0, x1, y1);
+    readBlock<w, h, gc_x, gc_y, -1,  1>(hu0_ptr_, hu0_pitch_, Q[1], nx_, ny_, boundary_conditions_, x0, y0, x1, y1);
+    readBlock<w, h, gc_x, gc_y,  1, -1>(hv0_ptr_, hv0_pitch_, Q[2], nx_, ny_, boundary_conditions_, x0, y0, x1, y1);
     
     //Compute F flux
     computeFluxF(Q, F, g_);
@@ -148,9 +158,9 @@ __global__ void HLLKernel(
     __syncthreads();
     
     // Write to main memory for all internal cells
-    writeBlock<w, h, gc_x, gc_y>( h1_ptr_,  h1_pitch_, Q[0], nx_, ny_, 0, 1);
-    writeBlock<w, h, gc_x, gc_y>(hu1_ptr_, hu1_pitch_, Q[1], nx_, ny_, 0, 1);
-    writeBlock<w, h, gc_x, gc_y>(hv1_ptr_, hv1_pitch_, Q[2], nx_, ny_, 0, 1);
+    writeBlock<w, h, gc_x, gc_y>( h1_ptr_,  h1_pitch_, Q[0], nx_, ny_, 0, 1, x0, y0, x1, y1);
+    writeBlock<w, h, gc_x, gc_y>(hu1_ptr_, hu1_pitch_, Q[1], nx_, ny_, 0, 1, x0, y0, x1, y1);
+    writeBlock<w, h, gc_x, gc_y>(hv1_ptr_, hv1_pitch_, Q[2], nx_, ny_, 0, 1, x0, y0, x1, y1);
     
     //Compute the CFL for this block
     if (cfl_ != NULL) {
