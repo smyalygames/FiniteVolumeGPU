@@ -18,6 +18,7 @@ dependencies:
 - pycuda
 - ipyparallel
 - line_profiler
+- tqdm
 
 # Install conda environment (one-time operation):
 # $ conda env create -f conda_environment.yml

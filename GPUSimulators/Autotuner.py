@@ -25,6 +25,7 @@ import gc
 import numpy as np
 import logging
 from socket import gethostname
+from tqdm.auto import tqdm
 
 import pycuda.driver as cuda
 
@@ -155,9 +156,9 @@ class Autotuner:
         sim_arguments = arguments.copy()
                     
         with Common.Timer(simulator.__name__) as t:
-            for j, block_height in enumerate(block_heights):
+            for j, block_height in enumerate(tqdm(block_heights, desc='Autotuner Progress')):
                 sim_arguments.update({'block_height': block_height})
-                for i, block_width in enumerate(block_widths):
+                for i, block_width in enumerate(tqdm(block_widths, desc=f'Iteration {j} Progress', leave=False)):
                     sim_arguments.update({'block_width': block_width})
                     megacells[j, i] = Autotuner.run_benchmark(simulator, sim_arguments)
                         

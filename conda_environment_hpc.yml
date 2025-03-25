@@ -12,6 +12,7 @@ dependencies:
 - pytools
 - netcdf4
 - scipy
+- tqdm
 
 # Install conda environment (one-time operation):
 # $ conda env create -f conda_environment_hpc.yml
