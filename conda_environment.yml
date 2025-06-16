@@ -1,29 +1,28 @@
 # Assumes that conda, pip, build-essentials and cuda are installed
 ---
-name: ShallowWaterGPU
+name: FiniteVolumeGPU_HPC
 channels:
 - conda-forge
 
 dependencies:
-- python=3.9
+- python=3.13.5
+- pip
 - numpy
-- matplotlib
-- jupyter
+- mpi4py
+- six
+- pytools
 - netcdf4
 - scipy
-- nb_conda_kernels
-- nbdime
-- mpi4py
-- ffmpeg
-- pycuda
-- ipyparallel
-- line_profiler
 - tqdm
+- pip:
+  - hip-python==6.4.1.552.39
+  - -i https://test.pypi.org/simple/
+
 
 # Install conda environment (one-time operation):
 # $ conda env create -f conda_environment.yml
 # Activate environment
-# $ conda activate ShallowWaterGPU
+# $ conda activate FiniteVolumeGPU_HPC
 
 # OPTIONAL: If you want to compile pycuda yourself, uncomment pycuda under 
 # "dependencies" above and do the following (one-time operation):
