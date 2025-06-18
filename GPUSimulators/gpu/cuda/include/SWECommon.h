@@ -1,5 +1,5 @@
 /*
-These CUDA functions implement different types of numerical flux 
+rThese CUDA functions implement different types of numerical flux 
 functions for the shallow water equations
 
 Copyright (C) 2016, 2017, 2018 SINTEF Digital

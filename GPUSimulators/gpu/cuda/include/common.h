@@ -463,7 +463,7 @@ __device__ float reduce_max(float *data, unsigned int n) {
     // Reduce to "threads" elements
     sdata[tid] = FLT_MIN;
     for (unsigned int i = tid; i < n; i += threads) {
-        sdata[tid] = max(sdata[tid], dt_ctx.L[i]);
+        sdata[tid] = max(sdata[tid], data[i]);
     }
     __syncthreads();
 
