@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
+#include <hip/amd_detail/amd_hip_vector_types.h>
+#include <hip/hip_runtime.h>
 #include "common.h"
 #include "limiters.h"
 
@@ -54,7 +56,7 @@ __device__ void writeCfl(float Q[vars][h + 2 * gc_y][w + 2 * gc_x],
     if (ti < nx_ + gc_x && tj < ny_ + gc_y) {
         if (ty == gc_y) {
             float min_val = shmem[ty][tx];
-            const int max_y = min(h, ny_ + gc_y - tj);
+            const int max_y = fminf(h, ny_ + gc_y - tj);
             for (int j = gc_y; j < max_y + gc_y; ++j) {
                 min_val = fminf(min_val, shmem[j][tx]);
             }
@@ -66,7 +68,7 @@ __device__ void writeCfl(float Q[vars][h + 2 * gc_y][w + 2 * gc_x],
     // One thread loops over first row to find global max
     if (tx == gc_x && ty == gc_y) {
         float min_val = shmem[ty][tx];
-        const int max_x = min(w, nx_ + gc_x - ti);
+        const int max_x = fminf(w, nx_ + gc_x - ti);
         for (int i = gc_x; i < max_x + gc_x; ++i) {
             min_val = fminf(min_val, shmem[ty][i]);
         }
@@ -95,12 +97,12 @@ __device__ inline float4 F_func(const float4 Q, const float P) {
 
     const float u = rho_u / rho;
 
-    float4 F;
-
-    F.x = rho_u;
-    F.y = rho_u * u + P;
-    F.z = rho_v * u;
-    F.w = u * (E + P);
+    float4 F = make_float4(
+        rho_u,
+        rho_u * u + P,
+        rho_v * u,
+        u * (E + P)
+    );
 
     return F;
 }
@@ -168,8 +170,8 @@ __device__ inline float4 CentralUpwindFlux(const float4 Qm, const float4 Qp, con
     const float um = Qm.y / Qm.x; // rho*u / rho
     const float cm = sqrt(gamma * Pm / Qm.x); // sqrt(gamma*P/rho)
 
-    const float am = min(min(um - cm, up - cp), 0.0f); // largest negative wave speed
-    const float ap = max(max(um + cm, up + cp), 0.0f); // largest positive wave speed
+    const float am = fminf(fminf(um - cm, up - cp), 0.0f); // largest negative wave speed
+    const float ap = fmaxf(fmaxf(um + cm, up + cp), 0.0f); // largest positive wave speed
 
     return ((ap * Fm - am * Fp) + ap * am * (Qp - Qm)) / (ap - am);
 }
