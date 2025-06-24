@@ -26,7 +26,8 @@ from IPython.core import magic_arguments
 from IPython.core.magic import line_magic, Magics, magics_class
 import pycuda.driver as cuda
 
-from GPUSimulators import Common, CudaContext
+from GPUSimulators import Common
+from GPUSimulators.gpu import CudaContext
 
 
 @magics_class

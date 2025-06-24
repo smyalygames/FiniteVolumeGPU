@@ -22,17 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
 import gc
-import time
-import json
 import logging
 
 #Simulator engine etc
-from GPUSimulators import SHMEMSimulatorGroup, Common, CudaContext
+from GPUSimulators import SHMEMSimulatorGroup, Common
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
-from GPUSimulators.Simulator import BoundaryCondition as BC
-
-
 
 ####
 #Initialize logging 

@@ -29,7 +29,8 @@ from tqdm.auto import tqdm
 
 import pycuda.driver as cuda
 
-from GPUSimulators import Common, Simulator, CudaContext
+from GPUSimulators import Common, Simulator
+from GPUSimulators.gpu import CudaContext
 
 
 class Autotuner:

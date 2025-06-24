@@ -20,12 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import logging
-from GPUSimulators import Simulator, CudaContext
+from GPUSimulators import Simulator
+from GPUSimulators.gpu import CudaContext
 import numpy as np
 
 import pycuda.driver as cuda
-
-import time
 
 
 class SHMEMGrid(object):

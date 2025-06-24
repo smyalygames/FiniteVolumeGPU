@@ -34,10 +34,10 @@ from mpi4py import MPI
 import pycuda.driver as cuda
 
 # Simulator engine etc
-from GPUSimulators import MPISimulator, Common, CudaContext
+from GPUSimulators import MPISimulator, Common
+from GPUSimulators.gpu import CudaContext
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
-from GPUSimulators.Simulator import BoundaryCondition as BC
 
 import argparse
 parser = argparse.ArgumentParser(description='Strong and weak scaling experiments.')

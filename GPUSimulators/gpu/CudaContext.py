@@ -34,6 +34,7 @@ import pycuda.gpuarray
 import pycuda.driver as cuda
 
 from GPUSimulators import Autotuner, Common
+from GPUSimulators.gpu.Context import Context
 
 
 class CudaContext(object):
@@ -85,13 +86,13 @@ class CudaContext(object):
         
         #Create cache dir for cubin files
         self.cache_path = os.path.join(self.module_path, "cuda_cache") 
-        if (self.use_cache):
+        if self.use_cache:
             if not os.path.isdir(self.cache_path):
                 os.mkdir(self.cache_path)
             self.logger.info("Using CUDA cache dir %s", self.cache_path)
             
         self.autotuner = None
-        if (autotuning):
+        if autotuning:
             self.logger.info("Autotuning enabled. It may take several minutes to run the code the first time: have patience")
             self.autotuner = Autotuner.Autotuner()
     
@@ -100,9 +101,9 @@ class CudaContext(object):
             
         # Loop over all contexts in stack, and remove "this"
         other_contexts = []
-        while (cuda.Context.get_current() != None):
+        while cuda.Context.get_current() is not None:
             context = cuda.Context.get_current()
-            if (context.handle != self.cuda_context.handle):
+            if context.handle != self.cuda_context.handle:
                 self.logger.debug("<%s> Popping <%s> (*not* ours)", str(self.cuda_context.handle), str(context.handle))
                 other_contexts = [context] + other_contexts
                 cuda.Context.pop()
@@ -145,7 +146,7 @@ class CudaContext(object):
         files = [kernel_filename]
         while len(files):
         
-            if (num_includes > max_includes):
+            if num_includes > max_includes:
                 raise RuntimeError("Maximum number of includes reached - circular include in {:}?".format(kernel_filename))
         
             filename = files.pop()
@@ -165,33 +166,33 @@ class CudaContext(object):
                 #Find all includes
                 includes = re.findall('^\W*#include\W+(.+?)\W*$', file_str, re.M)
                 
-            # Loop over everything that looks like an include
+            # Loop over everything that looks like an 'include'
             for include_file in includes:
                 
-                #Search through include directories for the file
+                # Search through 'include' directories for the file
                 file_path = os.path.dirname(filename)
                 for include_path in [file_path] + include_dirs:
                 
-                    # If we find it, add it to list of files to check
+                    # If we find it, add it to a list of files to check
                     temp_path = os.path.join(include_path, include_file)
-                    if (os.path.isfile(temp_path)):
+                    if os.path.isfile(temp_path):
                         files = files + [temp_path]
                         num_includes = num_includes + 1 #For circular includes...
                         break
             
         return kernel_hasher.hexdigest()
 
-    def get_module(self, kernel_filename: str, 
-                    include_dirs: list[str]=[], \
-                    defines: dict={}, \
-                    compile_args: dict={'no_extern_c': True}, jit_compile_args: dict={}) -> cuda.Module:
+    def get_module(self, kernel_filename: str,
+                   include_dirs: dict=None,
+                   defines:list[str]=None,
+                   compile_args:dict=None, jit_compile_args:dict=None) -> cuda.Module:
         """
         Reads a text file and creates an OpenCL kernel from that.
 
         Args:
             kernel_filename: The file to use for the kernel.
             include_dirs: List of directories for the ``#include``s referenced.
-            defines: Adds ``#define`` tags to the kernel, such as: ``#define key value``.
+            defines: Adds ``#define`` tags to the kernel, such as ``#define key value``.
             compile_args: Adds other compiler options (parameters) for ``pycuda.compiler.compile()``.
             jit_compile_args: Adds other just-in-time compilation options (parameters)
                 for ``pycuda.driver.module_from_buffer()``.
@@ -199,6 +200,15 @@ class CudaContext(object):
         Returns:
             The kernel module (pycuda.driver.Module).
         """
+
+        if defines is None:
+            defines = {}
+        if include_dirs is None:
+            include_dirs = []
+        if compile_args is None:
+            compile_args = {'no_extern_c': True}
+        if jit_compile_args is None:
+            jit_compile_args = {}
 
         def cuda_compile_message_handler(compile_success_bool, info_str, error_str):
             """
@@ -217,13 +227,13 @@ class CudaContext(object):
             
         # Create a hash of the kernel options
         options_hasher = hashlib.md5()
-        options_hasher.update(str(defines).encode('utf-8') + str(compile_args).encode('utf-8'));
+        options_hasher.update(str(defines).encode('utf-8') + str(compile_args).encode('utf-8'))
         options_hash = options_hasher.hexdigest()
         
         # Create hash of kernel souce
-        source_hash = self.hash_kernel( \
-                    kernel_path, \
-                    include_dirs=[self.module_path] + include_dirs)
+        source_hash = self.hash_kernel(
+            kernel_path,
+            include_dirs=[self.module_path] + include_dirs)
                     
         # Create final hash
         root, ext = os.path.splitext(kernel_filename)
@@ -234,12 +244,12 @@ class CudaContext(object):
         cached_kernel_filename = os.path.join(self.cache_path, kernel_hash)
         
         # If we have the kernel in our hashmap, return it
-        if (kernel_hash in self.modules.keys()):
+        if kernel_hash in self.modules.keys():
             self.logger.debug("Found kernel %s cached in hashmap (%s)", kernel_filename, kernel_hash)
             return self.modules[kernel_hash]
         
         # If we have it on disk, return it
-        elif (self.use_cache and os.path.isfile(cached_kernel_filename)):
+        elif self.use_cache and os.path.isfile(cached_kernel_filename):
             self.logger.debug("Found kernel %s cached on disk (%s)", kernel_filename, kernel_hash)
                 
             with io.open(cached_kernel_filename, "rb") as file:
@@ -258,7 +268,7 @@ class CudaContext(object):
             for key, value in defines.items():
                 kernel_string += "#define {:s} {:s}\n".format(str(key), str(value))
             kernel_string += '#include "{:s}"'.format(os.path.join(self.module_path, kernel_filename))
-            if (self.use_cache):
+            if self.use_cache:
                 cached_kernel_dir = os.path.dirname(cached_kernel_filename)
                 if not os.path.isdir(cached_kernel_dir):
                     os.mkdir(cached_kernel_dir)
@@ -272,7 +282,7 @@ class CudaContext(object):
                     warnings.filterwarnings("ignore", message="The CUDA compiler succeeded, but said the following:\nkernel.cu", category=UserWarning)
                     cubin = cuda_compiler.compile(kernel_string, include_dirs=include_dirs, cache_dir=False, **compile_args)
                 module = cuda.module_from_buffer(cubin, message_handler=cuda_compile_message_handler, **jit_compile_args)
-                if (self.use_cache):
+                if self.use_cache:
                     with io.open(cached_kernel_filename, "wb") as file:
                         file.write(cubin)
                 

@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 #Import packages we need
-from GPUSimulators import CudaContext, Simulator, Common
-from GPUSimulators.Simulator import BaseSimulator, BoundaryCondition
+from GPUSimulators import Simulator, Common
+from GPUSimulators.gpu import CudaContext
+from GPUSimulators.Simulator import BoundaryCondition
 import numpy as np
 
 from pycuda import gpuarray
@@ -33,12 +34,12 @@ class LxF (Simulator.BaseSimulator):
     Class that solves the SW equations using the Lax Friedrichs scheme
     """
 
-    def __init__(self, 
-                 context: CudaContext, 
-                 h0: float, hu0: float, hv0: float, 
-                 nx: int, ny: int, 
-                 dx: int, dy: int, 
-                 g: float, 
+    def __init__(self,
+                 context: CudaContext,
+                 h0: float, hu0: float, hv0: float,
+                 nx: int, ny: int,
+                 dx: int, dy: int,
+                 g: float,
                  cfl_scale: float=0.9,
                  boundary_conditions=BoundaryCondition(),
                  block_width: int=16, block_height: int=16,

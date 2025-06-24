@@ -25,11 +25,10 @@ import numpy as np
 import logging
 from enum import IntEnum
 
-import pycuda.compiler as cuda_compiler
-import pycuda.gpuarray
 import pycuda.driver as cuda
 
-from GPUSimulators import Common, CudaContext
+from GPUSimulators import Common
+from GPUSimulators.gpu import CudaContext
 
 
 class BoundaryCondition(object):    
@@ -100,10 +99,10 @@ class BoundaryCondition(object):
 
 class BaseSimulator(object):
    
-    def __init__(self, 
-                 context: CudaContext, 
-                 nx: int, ny: int, 
-                 dx: int, dy: int, 
+    def __init__(self,
+                 context: CudaContext,
+                 nx: int, ny: int,
+                 dx: int, dy: int,
                  boundary_conditions: BoundaryCondition,
                  cfl_scale: float,
                  num_substeps: int,

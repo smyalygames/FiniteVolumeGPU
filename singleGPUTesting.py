@@ -23,16 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 import gc
 import logging
-import os
 
 # CUDA
 import pycuda.driver as cuda
 
 # Simulator engine etc
-from GPUSimulators import Common, CudaContext
+from GPUSimulators import Common
+from GPUSimulators.gpu import CudaContext
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
-from GPUSimulators.Simulator import BoundaryCondition as BC
 
 import argparse
 parser = argparse.ArgumentParser(description='Single GPU testing.')
