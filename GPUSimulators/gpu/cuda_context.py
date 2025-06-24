@@ -182,7 +182,7 @@ class CudaContext(object):
 
     def get_module(self, kernel_filename: str,
                    include_dirs: dict=None,
-                   defines:list[str]=None,
+                   defines:dict[str: int]=None,
                    compile_args:dict=None, jit_compile_args:dict=None) -> cuda.Module:
         """
         Reads a text file and creates an OpenCL kernel from that.
