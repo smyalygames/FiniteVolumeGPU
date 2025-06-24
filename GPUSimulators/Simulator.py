@@ -84,8 +84,7 @@ class BoundaryCondition(object):
             raise (NotImplementedError("Neumann boundary condition not supported"))
 
     def __str__(self):
-        return '[north={:s}, south={:s}, east={:s}, west={:s}]'.format(str(self.north), str(self.south), str(self.east),
-                                                                       str(self.west))
+        return f"[north={str(self.north)}, south={str(self.south)}, east={str(self.east)}, west={str(self.west)}]"
 
     def as_coded_int(self):
         """
@@ -153,7 +152,7 @@ class BaseSimulator(object):
             peak_configuration = self.context.autotuner.get_peak_performance(self.__class__)
             block_width = int(peak_configuration["block_width"])
             block_height = int(peak_configuration["block_height"])
-            self.logger.debug("Used autotuning to get block size [%d x %d]", block_width, block_height)
+            self.logger.debug(f"Used autotuning to get block size [{block_width} x {block_height}]")
 
         # Compute kernel launch parameters
         self.block_size = (block_width, block_height, 1)
@@ -171,7 +170,7 @@ class BaseSimulator(object):
         self.nt = 0
 
     def __str__(self):
-        return "{:s} [{:d}x{:d}]".format(self.__class__.__name__, self.nx, self.ny)
+        return f"{self.__class__.__name__} [{self.nx}x{self.ny}]"
 
     def simulate(self, t, dt=None):
         """ 
@@ -200,7 +199,7 @@ class BaseSimulator(object):
 
             # Stop if end reached (should not happen)
             if current_dt <= 0.0:
-                self.logger.warning("Timestep size {:d} is less than or equal to zero!".format(self.sim_steps()))
+                self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
                 break
 
             # Step forward in time
@@ -209,11 +208,11 @@ class BaseSimulator(object):
             # Print info
             print_string = printer.get_print_string(self.sim_time() - t_start)
             if print_string:
-                self.logger.info("%s: %s", self, print_string)
+                self.logger.info(f"{self}: {print_string}")
                 try:
                     self.check()
                 except AssertionError as e:
-                    e.args += ("Step={:d}, time={:f}".format(self.sim_steps(), self.sim_time()),)
+                    e.args += f"Step={self.sim_steps()}, time={self.sim_time()}"
                     raise
 
     def step(self, dt: int):
@@ -246,7 +245,7 @@ class BaseSimulator(object):
         return [0, 0, self.nx * self.dx, self.ny * self.dy]
 
     def set_boundary_conditions(self, boundary_conditions):
-        self.logger.debug("Boundary conditions set to {:s}".format(str(boundary_conditions)))
+        self.logger.debug(f"Boundary conditions set to {str(boundary_conditions)}")
         self.boundary_conditions = boundary_conditions.as_coded_int()
 
     def get_boundary_conditions(self):

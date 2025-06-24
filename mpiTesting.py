@@ -97,7 +97,7 @@ grid = MPISimulator.MPIGrid(MPI.COMM_WORLD)
 ####
 cuda.init(flags=0)
 logger.info("Initializing CUDA")
-local_rank = grid.getLocalRank()
+local_rank = grid.get_local_rank()
 num_cuda_devices = cuda.Device.count()
 cuda_device = local_rank % num_cuda_devices
 logger.info("Process %s using CUDA device %s", str(local_rank), str(cuda_device))

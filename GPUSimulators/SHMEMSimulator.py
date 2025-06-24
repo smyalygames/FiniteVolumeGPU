@@ -82,10 +82,10 @@ class SHMEMSimulator(Simulator.BaseSimulator):
         
         for i, sim in enumerate(self.sims):
             #Get neighbor subdomain ids
-            self.east[i] = grid.getEast(i)
-            self.west[i] = grid.getWest(i)
-            self.north[i] = grid.getNorth(i)
-            self.south[i] = grid.getSouth(i)
+            self.east[i] = grid.get_east(i)
+            self.west[i] = grid.get_west(i)
+            self.north[i] = grid.get_north(i)
+            self.south[i] = grid.get_south(i)
             
             #Get coordinate of this subdomain
             #and handle global boundary conditions
@@ -95,7 +95,7 @@ class SHMEMSimulator(Simulator.BaseSimulator):
                 'east': Simulator.BoundaryCondition.Type.Dirichlet,
                 'west': Simulator.BoundaryCondition.Type.Dirichlet
             })
-            gi, gj = grid.getCoordinate(i)
+            gi, gj = grid.get_coordinate(i)
             if (gi == 0 and boundary_conditions.west != Simulator.BoundaryCondition.Type.Periodic):
                 self.west = None
                 new_boundary_conditions.west = boundary_conditions.west;
@@ -186,7 +186,7 @@ class SHMEMSimulator(Simulator.BaseSimulator):
         """
         width = self.sims[index].nx*self.sims[index].dx
         height = self.sims[index].ny*self.sims[index].dy
-        i, j = self.grid.getCoordinate(index)
+        i, j = self.grid.get_coordinate(index)
         x0 = i * width
         y0 = j * height 
         x1 = x0 + width

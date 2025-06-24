@@ -41,43 +41,43 @@ class MPIGrid(object):
         assert ndims == 2, "Unsupported number of dimensions. Must be two at the moment"
         assert comm.size >= 1, "Must have at least one node"
         
-        self.grid = MPIGrid.getGrid(comm.size, ndims)
+        self.grid = MPIGrid.get_grid(comm.size, ndims)
         self.comm = comm
         
         self.logger.debug("Created MPI grid: {:}. Rank {:d} has coordinate {:}".format(
                 self.grid, self.comm.rank, self.getCoordinate()))
 
-    def getCoordinate(self, rank=None):
-        if (rank is None):
+    def get_coordinate(self, rank=None):
+        if rank is None:
             rank = self.comm.rank
         i = (rank  % self.grid[0])
         j = (rank // self.grid[0])
         return i, j
 
-    def getRank(self, i, j):
+    def get_rank(self, i, j):
         return j*self.grid[0] + i
 
-    def getEast(self):
-        i, j = self.getCoordinate(self.comm.rank)
+    def get_east(self):
+        i, j = self.get_coordinate(self.comm.rank)
         i = (i+1) % self.grid[0]
-        return self.getRank(i, j)
+        return self.get_rank(i, j)
 
-    def getWest(self):
-        i, j = self.getCoordinate(self.comm.rank)
+    def get_west(self):
+        i, j = self.get_coordinate(self.comm.rank)
         i = (i+self.grid[0]-1) % self.grid[0]
-        return self.getRank(i, j)
+        return self.get_rank(i, j)
 
-    def getNorth(self):
-        i, j = self.getCoordinate(self.comm.rank)
+    def get_north(self):
+        i, j = self.get_coordinate(self.comm.rank)
         j = (j+1) % self.grid[1]
-        return self.getRank(i, j)
+        return self.get_rank(i, j)
 
-    def getSouth(self):
-        i, j = self.getCoordinate(self.comm.rank)
+    def get_south(self):
+        i, j = self.get_coordinate(self.comm.rank)
         j = (j+self.grid[1]-1) % self.grid[1]
-        return self.getRank(i, j)
+        return self.get_rank(i, j)
     
-    def getGrid(num_nodes, num_dims):
+    def get_grid(num_nodes, num_dims):
         assert(isinstance(num_nodes, int))
         assert(isinstance(num_dims, int))
         
@@ -150,7 +150,7 @@ class MPIGrid(object):
         self.comm.Gather(data, out_data, root)
         return out_data
         
-    def getLocalRank(self):
+    def get_local_rank(self):
         """
         Returns the local rank on this node for this MPI process
         """
@@ -236,10 +236,10 @@ class MPISimulator(Simulator.BaseSimulator):
         self.grid = grid
         
         #Get neighbor node ids
-        self.east = grid.getEast()
-        self.west = grid.getWest()
-        self.north = grid.getNorth()
-        self.south = grid.getSouth()
+        self.east = grid.get_east()
+        self.west = grid.get_west()
+        self.north = grid.get_north()
+        self.south = grid.get_south()
         
         #Get coordinate of this node
         #and handle global boundary conditions
@@ -249,7 +249,7 @@ class MPISimulator(Simulator.BaseSimulator):
             'east': Simulator.BoundaryCondition.Type.Dirichlet,
             'west': Simulator.BoundaryCondition.Type.Dirichlet
         })
-        gi, gj = grid.getCoordinate()
+        gi, gj = grid.get_coordinate()
         #print("gi: " + str(gi) + ", gj: " + str(gj))
         if (gi == 0 and boundary_conditions.west != Simulator.BoundaryCondition.Type.Periodic):
             self.west = None
@@ -360,7 +360,7 @@ class MPISimulator(Simulator.BaseSimulator):
 
         width = self.sim.nx*self.sim.dx
         height = self.sim.ny*self.sim.dy
-        i, j = self.grid.getCoordinate()
+        i, j = self.grid.get_coordinate()
         x0 = i * width
         y0 = j * height 
         x1 = x0 + width
@@ -440,7 +440,7 @@ class MPISimulator(Simulator.BaseSimulator):
         
         self.profiling_data_mpi["end"]["t_mpi_halo_exchange_download"] += time.time()
         
-        #Send/receive to east/west neighbours
+        #Send/receive to east/west neighbors
         self.profiling_data_mpi["start"]["t_mpi_halo_exchange_sendreceive"] += time.time()
         
         comm_send = []

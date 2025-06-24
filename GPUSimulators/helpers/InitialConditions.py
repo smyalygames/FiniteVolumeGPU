@@ -29,9 +29,9 @@ def getExtent(width, height, nx, ny, grid, index=None):
         gx = grid.grid[0]
         gy = grid.grid[1]
         if index is not None:
-            i, j = grid.getCoordinate(index)
+            i, j = grid.get_coordinate(index)
         else:
-            i, j = grid.getCoordinate()
+            i, j = grid.get_coordinate()
         
         dx = (width / gx) / nx
         dy = (height / gy) / ny
