@@ -46,7 +46,7 @@ class MagicCudaContext(Magics):
         args = magic_arguments.parse_argstring(self.cuda_context_handler, line)
         self.logger = logging.getLogger(__name__)
 
-        self.logger.info("Registering %s in user workspace", args.name)
+        self.logger.info(f"Registering {args.name} in user workspace")
 
         context_flags = None
         if args.blocking:
@@ -64,17 +64,17 @@ class MagicCudaContext(Magics):
 
         # this function will be called on exceptions in any cell
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
-            self.logger.exception("Exception caught: Resetting to CUDA context %s", args.name)
+            self.logger.exception(f"Exception caught: Resetting to CUDA context {args.name}")
             while cuda.Context.get_current() is not None:
                 context = cuda.Context.get_current()
-                self.logger.info("Popping <%s>", str(context.handle))
+                self.logger.info(f"Popping <{str(context.handle)}>")
                 cuda.Context.pop()
 
             if args.name in self.shell.user_ns.keys():
-                self.logger.info("Pushing <%s>", str(self.shell.user_ns[args.name].cuda_context.handle))
+                self.logger.info(f"Pushing <{str(self.shell.user_ns[args.name].cuda_context.handle)}>")
                 self.shell.user_ns[args.name].cuda_context.push()
             else:
-                self.logger.error("No CUDA context called %s found (something is wrong)", args.name)
+                self.logger.error(f"No CUDA context called {args.name} found (something is wrong)")
                 self.logger.error("CUDA will not work now")
 
             self.logger.debug("==================================================================")
@@ -89,9 +89,9 @@ class MagicCudaContext(Magics):
         import atexit
         def exitfunc():
             self.logger.info("Exitfunc: Resetting CUDA context stack")
-            while cuda.Context.get_current() != None:
+            while cuda.Context.get_current() is not None:
                 context = cuda.Context.get_current()
-                self.logger.info("`-> Popping <%s>", str(context.handle))
+                self.logger.info(f"`-> Popping <{str(context.handle)}>")
                 cuda.Context.pop()
             self.logger.debug("==================================================================")
 
@@ -130,7 +130,7 @@ class MagicLogger(Magics):
             ch = logging.StreamHandler()
             ch.setLevel(args.level)
             logger.addHandler(ch)
-            logger.log(args.level, "Console logger using level %s", logging.getLevelName(args.level))
+            logger.log(args.level, f"Console logger using level {logging.getLevelName(args.level)}")
 
             # Get the outfilename (try to evaluate if Python expression...)
             try:
@@ -139,7 +139,7 @@ class MagicLogger(Magics):
                 outfile = args.out
 
             # Add log to file
-            logger.log(args.level, "File logger using level %s to %s", logging.getLevelName(args.file_level), outfile)
+            logger.log(args.level, f"File logger using level {logging.getLevelName(args.file_level)} to {outfile}")
 
             fh = logging.FileHandler(outfile)
             formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s')
@@ -147,7 +147,7 @@ class MagicLogger(Magics):
             fh.setLevel(args.file_level)
             logger.addHandler(fh)
 
-        logger.info("Python version %s", sys.version)
+        logger.info(f"Python version {sys.version}")
         self.shell.user_ns[args.name] = logger
 
 
