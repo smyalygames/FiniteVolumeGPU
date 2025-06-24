@@ -72,7 +72,7 @@ class Force(Simulator.BaseSimulator):
         self.g = np.float32(g)
 
         # Get kernels
-        module = context.get_module("cuda/SWE2D_FORCE.cu",
+        module = context.get_module("SWE2D_FORCE",
                                     defines={
                                         'BLOCK_WIDTH': self.block_size[0],
                                         'BLOCK_HEIGHT': self.block_size[1]

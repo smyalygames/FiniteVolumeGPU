@@ -80,7 +80,7 @@ class KP07(Simulator.BaseSimulator):
         self.order = np.int32(order)
 
         # Get kernels
-        module = context.get_module("cuda/SWE2D_KP07.cu",
+        module = context.get_module("SWE2D_KP07",
                                     defines={
                                         'BLOCK_WIDTH': self.block_size[0],
                                         'BLOCK_HEIGHT': self.block_size[1]

@@ -91,7 +91,7 @@ class HIPContext(Context):
             if error_str:
                 self.logger.debug(f"Compilation error: {error_str}")
 
-        kernel_filename = os.path.normpath(kernel_filename)
+        kernel_filename = os.path.normpath("hip/" + kernel_filename + ".hip")
         kernel_path = os.path.abspath(os.path.join(self.module_path, kernel_filename))
 
         # Create a hash of the kernel options

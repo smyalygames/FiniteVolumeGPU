@@ -80,7 +80,7 @@ class KP07Dimsplit(Simulator.BaseSimulator):
         self.theta = np.float32(theta)
 
         # Get kernels
-        module = context.get_module("cuda/SWE2D_KP07_dimsplit.cu",
+        module = context.get_module("SWE2D_KP07_dimsplit",
                                     defines={
                                         'BLOCK_WIDTH': self.block_size[0],
                                         'BLOCK_HEIGHT': self.block_size[1]

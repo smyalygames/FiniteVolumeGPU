@@ -221,7 +221,7 @@ class CudaContext(object):
             if error_str:
                 self.logger.debug(f"Error: {error_str}")
 
-        kernel_filename = os.path.normpath(kernel_filename)
+        kernel_filename = os.path.normpath("cuda/" + kernel_filename + ".cu")
         kernel_path = os.path.abspath(os.path.join(self.module_path, kernel_filename))
         # self.logger.debug("Getting %s", kernel_filename)
 
