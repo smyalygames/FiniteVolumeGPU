@@ -1,12 +1,12 @@
-import logging
-
 import numpy as np
 import pycuda.gpuarray
 import pycuda.driver as cuda
 from pycuda.tools import PageLockedMemoryPool
 
+from GPUSimulators.common.arrays.array3d import BaseArray3D
 
-class CudaArray3D:
+
+class CudaArray3D(BaseArray3D):
     """
     Class that holds 3D data
     """
@@ -16,39 +16,14 @@ class CudaArray3D:
         Uploads initial data to the CL device
         """
 
-        self.logger = logging.getLogger(__name__)
-        self.nx = nx
-        self.ny = ny
-        self.nz = nz
-        self.x_halo = x_halo
-        self.y_halo = y_halo
-        self.z_halo = z_halo
-
-        nx_halo = nx + 2 * x_halo
-        ny_halo = ny + 2 * y_halo
-        nz_halo = nz + 2 * z_halo
+        super().__init__(nx, ny, nz, x_halo, y_halo, z_halo, cpu_data)
 
         # self.logger.debug("Allocating [%dx%dx%d] buffer", self.nx, self.ny, self.nz)
         # Should perhaps use pycuda.driver.mem_alloc_data.pitch() here
-        self.data = pycuda.gpuarray.zeros((nz_halo, ny_halo, nx_halo), dtype)
+        self.data = pycuda.gpuarray.zeros((self.nz_halo, self.ny_halo, self.nx_halo), dtype)
 
         # For returning to download
         self.memorypool = PageLockedMemoryPool()
-
-        # If we don't have any data, just allocate and return
-        if cpu_data is None:
-            return
-
-        # Make sure data is in proper format
-        if (cpu_data.shape != (nz_halo, ny_halo, nx_halo)
-                and cpu_data.shape != (self.nz, self.ny, self.nx)):
-            raise ValueError(f"Wrong shape of data {str(cpu_data.shape)} vs {str((self.nz, self.ny, self.nx))} / {str((nz_halo, ny_halo, nx_halo))}")
-
-        if cpu_data.itemsize != 4:
-            raise ValueError("Wrong size of data type")
-
-        if np.isfortran(cpu_data):
-            raise TypeError("Wrong datatype (Fortran, expected C)")
 
         # Create a copy object from host to device
         copy = cuda.Memcpy3D()
@@ -56,9 +31,9 @@ class CudaArray3D:
         copy.set_dst_device(self.data.gpudata)
 
         # Set offsets of destination
-        x_offset = (nx_halo - cpu_data.shape[2]) // 2
-        y_offset = (ny_halo - cpu_data.shape[1]) // 2
-        z_offset = (nz_halo - cpu_data.shape[0]) // 2
+        x_offset = (self.nx_halo - cpu_data.shape[2]) // 2
+        y_offset = (self.ny_halo - cpu_data.shape[1]) // 2
+        z_offset = (self.nz_halo - cpu_data.shape[0]) // 2
         copy.dst_x_in_bytes = x_offset * self.data.strides[1]
         copy.dst_y = y_offset
         copy.dst_z = z_offset

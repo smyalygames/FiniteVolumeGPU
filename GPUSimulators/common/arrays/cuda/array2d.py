@@ -1,13 +1,13 @@
-import logging
-
 import numpy as np
 
 import pycuda.gpuarray
 import pycuda.driver as cuda
 from pycuda.tools import PageLockedMemoryPool
 
+from GPUSimulators.common.arrays.array2d import BaseArray2D
 
-class CudaArray2D:
+
+class CudaArray2D(BaseArray2D):
     """
     Class that holds 2D CUDA data
     """
@@ -17,40 +17,17 @@ class CudaArray2D:
         Uploads initial data to the CUDA device
         """
 
-        self.logger = logging.getLogger(__name__)
-        self.nx = nx
-        self.ny = ny
-        self.x_halo = x_halo
-        self.y_halo = y_halo
-
-        nx_halo = nx + 2 * x_halo
-        ny_halo = ny + 2 * y_halo
-
+        super().__init__(nx, ny, x_halo, y_halo, cpu_data)
         # self.logger.debug("Allocating [%dx%d] buffer", self.nx, self.ny)
         # Should perhaps use pycuda.driver.mem_alloc_data.pitch() here
-        self.data = pycuda.gpuarray.zeros((ny_halo, nx_halo), dtype)
+        self.data = pycuda.gpuarray.zeros((self.ny_halo, self.nx_halo), dtype)
 
         # For returning to download
         self.memorypool = PageLockedMemoryPool()
 
-        # If we don't have any data, just allocate and return
-        if cpu_data is None:
-            return
-
-        # Make sure data is in proper format
-        if cpu_data.shape != (ny_halo, nx_halo) and cpu_data.shape != (self.ny, self.nx):
-            raise ValueError(
-                f"Wrong shape of data {str(cpu_data.shape)} vs {str((self.ny, self.nx))} / {str((ny_halo, nx_halo))}")
-
-        if cpu_data.itemsize != 4:
-            raise ValueError("Wrong size of data type")
-
-        if np.isfortran(cpu_data):
-            raise TypeError("Wrong datatype (Fortran, expected C)")
-
         # Create a copy object from host to device
-        x = (nx_halo - cpu_data.shape[1]) // 2
-        y = (ny_halo - cpu_data.shape[0]) // 2
+        x = (self.nx_halo - cpu_data.shape[1]) // 2
+        y = (self.ny_halo - cpu_data.shape[0]) // 2
         self.upload(stream, cpu_data, extent=[x, y, cpu_data.shape[1], cpu_data.shape[0]])
         # self.logger.debug("Buffer <%s> [%dx%d]: Allocated ", int(self.data.gpudata), self.nx, self.ny)
 

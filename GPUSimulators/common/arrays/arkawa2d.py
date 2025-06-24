@@ -1,14 +1,11 @@
 import logging
 
-import numpy as np
-import pycuda.gpuarray
-
-from GPUSimulators.common.cuda_array_2d import CudaArray2D
+from GPUSimulators.common.arrays import Array2D
 
 
-class ArakawaA2D:
+class BaseArakawaA2D(object):
     """
-    A class representing an Arakawa A type (unstaggered, logically Cartesian) grid
+    A base class to be used to represent an Arakawa A type (unstaggered, logically Cartesian) grid.
     """
 
     def __init__(self, stream, nx, ny, halo_x, halo_y, cpu_variables):
@@ -17,8 +14,9 @@ class ArakawaA2D:
         """
         self.logger = logging.getLogger(__name__)
         self.gpu_variables = []
+
         for cpu_variable in cpu_variables:
-            self.gpu_variables += [CudaArray2D(stream, nx, ny, halo_x, halo_y, cpu_variable)]
+            self.gpu_variables += [Array2D(stream, nx, ny, halo_x, halo_y, cpu_variable)]
 
     def __getitem__(self, key):
         if type(key) != int:
@@ -43,15 +41,3 @@ class ArakawaA2D:
 
         # stream.synchronize()
         return cpu_variables
-
-    def check(self):
-        """
-        Checks that data is still sane
-        """
-        for i, gpu_variable in enumerate(self.gpu_variables):
-            var_sum = pycuda.gpuarray.sum(gpu_variable.data).get()
-            self.logger.debug(f"Data {i} with size [{gpu_variable.nx} x {gpu_variable.ny}] "
-                              + f"has average {var_sum / (gpu_variable.nx * gpu_variable.ny)}")
-
-            if np.isnan(var_sum):
-                raise ValueError("Data contains NaN values!")
