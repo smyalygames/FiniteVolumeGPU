@@ -20,13 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import logging
-from GPUSimulators import Simulator
 import numpy as np
 from mpi4py import MPI
 import time
 
 import pycuda.driver as cuda
 #import nvtx
+
+from GPUSimulators import Simulator
 
 
 def get_grid(num_nodes, num_dims):

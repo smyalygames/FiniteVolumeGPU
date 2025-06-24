@@ -28,7 +28,7 @@ from enum import IntEnum
 import pycuda.driver as cuda
 
 from GPUSimulators.common import ProgressPrinter
-from GPUSimulators.gpu import CudaContext
+from GPUSimulators.gpu import KernelContext
 
 
 def get_types(bc):
@@ -107,7 +107,7 @@ class BoundaryCondition(object):
 class BaseSimulator(object):
 
     def __init__(self,
-                 context: CudaContext,
+                 context: KernelContext,
                  nx: int, ny: int,
                  dx: int, dy: int,
                  boundary_conditions: BoundaryCondition,

@@ -26,7 +26,6 @@ from pycuda import gpuarray
 
 from GPUSimulators import Simulator
 from GPUSimulators.common import ArakawaA2D
-from GPUSimulators.gpu import CudaContext
 from GPUSimulators.Simulator import BoundaryCondition
 
 
@@ -36,7 +35,7 @@ class LxF(Simulator.BaseSimulator):
     """
 
     def __init__(self,
-                 context: CudaContext,
+                 context,
                  h0: float, hu0: float, hv0: float,
                  nx: int, ny: int,
                  dx: int, dy: int,
