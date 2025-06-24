@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
-import numpy as np
-import time
 import re
 import io
 import hashlib
@@ -33,8 +31,8 @@ import pycuda.compiler as cuda_compiler
 import pycuda.gpuarray
 import pycuda.driver as cuda
 
-from GPUSimulators import Autotuner, Common
-from GPUSimulators.gpu.Context import Context
+from GPUSimulators import Autotuner
+from GPUSimulators.common import common
 
 
 class CudaContext(object):

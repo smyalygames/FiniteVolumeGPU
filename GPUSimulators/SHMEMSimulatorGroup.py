@@ -62,8 +62,8 @@ class SHMEMGrid(object):
 
         for i in range(self.ngpus):
             # XXX: disabled for testing on single-GPU system
-            #self.cuda_contexts.append(CudaContext.CudaContext(device=i, autotuning=False))
-            self.cuda_contexts.append(CudaContext.CudaContext(device=0, autotuning=False))
+            #self.cuda_contexts.append(CudaContext(device=i, autotuning=False))
+            self.cuda_contexts.append(CudaContext(device=0, autotuning=False))
 
     def getCoordinate(self, index):
         i = (index  % self.grid[0])
@@ -180,7 +180,7 @@ class SHMEMSimulatorGroup(object):
         
         autotuner = sims[0].context.autotuner
         sims[0].context.autotuner = None
-        boundary_conditions = sims[0].getBoundaryConditions()
+        boundary_conditions = sims[0].get_boundary_conditions()
         super().__init__(sims[0].context, 
             sims[0].nx, sims[0].ny, 
             sims[0].dx, sims[0].dy, 
@@ -243,14 +243,14 @@ class SHMEMSimulatorGroup(object):
             if (gj == grid.grid[1]-1 and boundary_conditions.north != Simulator.BoundaryCondition.Type.Periodic):
                 self.north = None
                 new_boundary_conditions.north = boundary_conditions.north;
-            sim.setBoundaryConditions(new_boundary_conditions)
+            sim.set_boundary_conditions(new_boundary_conditions)
                     
             #Get number of variables
-            self.nvars[i] = len(sim.getOutput().gpu_variables)
+            self.nvars[i] = len(sim.get_output().gpu_variables)
             
             #Shorthands for computing extents and sizes
-            gc_x = int(sim.getOutput()[0].x_halo)
-            gc_y = int(sim.getOutput()[0].y_halo)
+            gc_x = int(sim.get_output()[0].x_halo)
+            gc_y = int(sim.get_output()[0].y_halo)
             nx = int(sim.nx)
             ny = int(sim.ny)
             
@@ -287,7 +287,7 @@ class SHMEMSimulatorGroup(object):
     def getOutput(self):
         # XXX: Does not return what we would expect.
         # Returns first subdomain, but we want the whole domain.
-        return self.sims[0].getOutput() 
+        return self.sims[0].get_output()
         
     def synchronize(self):
         for sim in self.sims:
@@ -305,7 +305,7 @@ class SHMEMSimulatorGroup(object):
             sim.context.synchronize()
 
         for sim in self.sims:
-            local_dt = sim.computeDt()
+            local_dt = sim.compute_dt()
             if local_dt < global_dt:
                 global_dt = local_dt
             self.logger.debug("Local dt: {:f}".format(local_dt))

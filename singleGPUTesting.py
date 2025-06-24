@@ -28,8 +28,8 @@ import logging
 import pycuda.driver as cuda
 
 # Simulator engine etc
-from GPUSimulators import Common
-from GPUSimulators.gpu import CudaContext
+from GPUSimulators.common import common
+from GPUSimulators.gpu import cuda_context
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
@@ -104,7 +104,7 @@ def genSim(**kwargs):
     return local_sim
 
 
-outfile = Common.runSimulation(
+outfile = Common.run_simulation(
     genSim, arguments, outfile, save_times, save_var_names)
 
 ####

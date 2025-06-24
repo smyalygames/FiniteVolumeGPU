@@ -34,8 +34,9 @@ from mpi4py import MPI
 import pycuda.driver as cuda
 
 # Simulator engine etc
-from GPUSimulators import MPISimulator, Common
-from GPUSimulators.gpu import CudaContext
+from GPUSimulators import MPISimulator
+from GPUSimulators.common import common
+from GPUSimulators.gpu import cuda_context
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
@@ -147,7 +148,7 @@ def genSim(grid, **kwargs):
     return sim
 
 
-outfile, sim_runner_profiling_data, sim_profiling_data = Common.runSimulation(
+outfile, sim_runner_profiling_data, sim_profiling_data = Common.run_simulation(
     genSim, arguments, outfile, save_times, save_var_names, dt)
 
 if(args.profile):
@@ -183,8 +184,8 @@ if(args.profile and MPI.COMM_WORLD.rank == 0):
     profiling_data["slurm_job_id"] = job_id
     profiling_data["n_cuda_devices"] = str(num_cuda_devices)
     profiling_data["n_processes"] = str(MPI.COMM_WORLD.size)
-    profiling_data["git_hash"] = Common.getGitHash()
-    profiling_data["git_status"] = Common.getGitStatus()
+    profiling_data["git_hash"] = Common.get_git_hash()
+    profiling_data["git_status"] = Common.get_git_status()
 
     with open(profiling_file, "w") as write_file:
         json.dump(profiling_data, write_file)

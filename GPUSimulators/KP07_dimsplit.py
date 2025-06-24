@@ -24,12 +24,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#Import packages we need
-from GPUSimulators import Simulator, Common
-from GPUSimulators.Simulator import BaseSimulator, BoundaryCondition
+# Import packages we need
 import numpy as np
-
 from pycuda import gpuarray
+
+from GPUSimulators import Simulator
+from GPUSimulators.common import ArakawaA2D
+from GPUSimulators.Simulator import BoundaryCondition
 
 
 class KP07_dimsplit(Simulator.BaseSimulator):
@@ -37,18 +38,18 @@ class KP07_dimsplit(Simulator.BaseSimulator):
     Class that solves the SW equations using the dimentionally split KP07 scheme
     """
 
-    def __init__(self, 
-                 context, 
-                 h0, hu0, hv0, 
-                 nx, ny, 
-                 dx, dy, 
-                 g, 
-                 theta=1.3, 
+    def __init__(self,
+                 context,
+                 h0, hu0, hv0,
+                 nx, ny,
+                 dx, dy,
+                 g,
+                 theta=1.3,
                  cfl_scale=0.9,
-                 boundary_conditions=BoundaryCondition(), 
+                 boundary_conditions=BoundaryCondition(),
                  block_width=16, block_height=16,
-                 dt: float=None,
-                 compile_opts: list[str]=[]):
+                 dt: float = None,
+                 compile_opts: list[str] = []):
         """
         Initialization routine
         
@@ -64,83 +65,83 @@ class KP07_dimsplit(Simulator.BaseSimulator):
             g: Gravitational accelleration (9.81 m/s^2)
             compile_opts: Pass a list of nvcc compiler options
         """
-                 
+
         # Call super constructor
-        super().__init__(context, 
-            nx, ny, 
-            dx, dy, 
-            boundary_conditions,
-            cfl_scale,
-            2, 
-            block_width, block_height)
+        super().__init__(context,
+                         nx, ny,
+                         dx, dy,
+                         boundary_conditions,
+                         cfl_scale,
+                         2,
+                         block_width, block_height)
         self.gc_x = 2
         self.gc_y = 2
         self.g = np.float32(g)
         self.theta = np.float32(theta)
 
-        #Get kernels
-        module = context.get_module("cuda/SWE2D_KP07_dimsplit.cu", 
-                                        defines={
-                                            'BLOCK_WIDTH': self.block_size[0], 
-                                            'BLOCK_HEIGHT': self.block_size[1]
-                                        }, 
-                                        compile_args={
-                                            'no_extern_c': True,
-                                            'options': ["--use_fast_math"] + compile_opts, 
-                                        }, 
-                                        jit_compile_args={})
+        # Get kernels
+        module = context.get_module("cuda/SWE2D_KP07_dimsplit.cu",
+                                    defines={
+                                        'BLOCK_WIDTH': self.block_size[0],
+                                        'BLOCK_HEIGHT': self.block_size[1]
+                                    },
+                                    compile_args={
+                                        'no_extern_c': True,
+                                        'options': ["--use_fast_math"] + compile_opts,
+                                    },
+                                    jit_compile_args={})
         self.kernel = module.get_function("KP07DimsplitKernel")
         self.kernel.prepare("iifffffiiPiPiPiPiPiPiPiiii")
-    
-        #Create data by uploading to device
-        self.u0 = Common.ArakawaA2D(self.stream, 
-                        nx, ny, 
-                        self.gc_x, self.gc_y, 
-                        [h0, hu0, hv0])
-        self.u1 = Common.ArakawaA2D(self.stream, 
-                        nx, ny, 
-                        self.gc_x, self.gc_y, 
-                        [None, None, None])
+
+        # Create data by uploading to the device
+        self.u0 = ArakawaA2D(self.stream,
+                             nx, ny,
+                             self.gc_x, self.gc_y,
+                             [h0, hu0, hv0])
+        self.u1 = ArakawaA2D(self.stream,
+                             nx, ny,
+                             self.gc_x, self.gc_y,
+                             [None, None, None])
         self.cfl_data = gpuarray.GPUArray(self.grid_size, dtype=np.float32)
 
-        if dt == None:
-            dt_x = np.min(self.dx / (np.abs(hu0/h0) + np.sqrt(g*h0)))
-            dt_y = np.min(self.dy / (np.abs(hv0/h0) + np.sqrt(g*h0)))
+        if dt is None:
+            dt_x = np.min(self.dx / (np.abs(hu0 / h0) + np.sqrt(g * h0)))
+            dt_y = np.min(self.dy / (np.abs(hv0 / h0) + np.sqrt(g * h0)))
             self.dt = min(dt_x, dt_y)
         else:
             self.dt = dt
-        
+
         self.cfl_data.fill(self.dt, stream=self.stream)
-    
+
     def substep(self, dt, step_number):
-        self.substepDimsplit(dt*0.5, step_number)
-    
-    def substepDimsplit(self, dt, substep):
-        self.kernel.prepared_async_call(self.grid_size, self.block_size, self.stream, 
-                self.nx, self.ny, 
-                self.dx, self.dy, dt, 
-                self.g, 
-                self.theta, 
-                substep, 
-                self.boundary_conditions, 
-                self.u0[0].data.gpudata, self.u0[0].data.strides[0], 
-                self.u0[1].data.gpudata, self.u0[1].data.strides[0], 
-                self.u0[2].data.gpudata, self.u0[2].data.strides[0], 
-                self.u1[0].data.gpudata, self.u1[0].data.strides[0], 
-                self.u1[1].data.gpudata, self.u1[1].data.strides[0], 
-                self.u1[2].data.gpudata, self.u1[2].data.strides[0],
-                self.cfl_data.gpudata,
-                0, 0,
-                self.nx, self.ny)
+        self.substep_dimsplit(dt * 0.5, step_number)
+
+    def substep_dimsplit(self, dt, substep):
+        self.kernel.prepared_async_call(self.grid_size, self.block_size, self.stream,
+                                        self.nx, self.ny,
+                                        self.dx, self.dy, dt,
+                                        self.g,
+                                        self.theta,
+                                        substep,
+                                        self.boundary_conditions,
+                                        self.u0[0].data.gpudata, self.u0[0].data.strides[0],
+                                        self.u0[1].data.gpudata, self.u0[1].data.strides[0],
+                                        self.u0[2].data.gpudata, self.u0[2].data.strides[0],
+                                        self.u1[0].data.gpudata, self.u1[0].data.strides[0],
+                                        self.u1[1].data.gpudata, self.u1[1].data.strides[0],
+                                        self.u1[2].data.gpudata, self.u1[2].data.strides[0],
+                                        self.cfl_data.gpudata,
+                                        0, 0,
+                                        self.nx, self.ny)
         self.u0, self.u1 = self.u1, self.u0
 
-    def getOutput(self):
+    def get_output(self):
         return self.u0
 
     def check(self):
         self.u0.check()
         self.u1.check()
 
-    def computeDt(self):
-        max_dt = gpuarray.min(self.cfl_data, stream=self.stream).get();
-        return max_dt*0.5
+    def compute_dt(self):
+        max_dt = gpuarray.min(self.cfl_data, stream=self.stream).get()
+        return max_dt * 0.5

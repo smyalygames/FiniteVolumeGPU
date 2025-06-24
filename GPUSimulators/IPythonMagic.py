@@ -26,12 +26,12 @@ from IPython.core import magic_arguments
 from IPython.core.magic import line_magic, Magics, magics_class
 import pycuda.driver as cuda
 
-from GPUSimulators import Common
+from GPUSimulators.common import IPEngine
 from GPUSimulators.gpu import CudaContext
 
 
 @magics_class
-class MagicCudaContext(Magics): 
+class MagicCudaContext(Magics):
     @line_magic
     @magic_arguments.magic_arguments()
     @magic_arguments.argument(
@@ -44,14 +44,14 @@ class MagicCudaContext(Magics):
         '--no_autotuning', '-na', action="store_true", help='Disable autotuning of kernels')
     def cuda_context_handler(self, line):
         args = magic_arguments.parse_argstring(self.cuda_context_handler, line)
-        self.logger =  logging.getLogger(__name__)
-        
+        self.logger = logging.getLogger(__name__)
+
         self.logger.info("Registering %s in user workspace", args.name)
-        
+
         context_flags = None
-        if (args.blocking):
+        if args.blocking:
             context_flags = cuda.ctx_flags.SCHED_BLOCKING_SYNC
-        
+
         if args.name in self.shell.user_ns.keys():
             self.logger.debug("Context already registered! Ignoring")
             return
@@ -59,12 +59,13 @@ class MagicCudaContext(Magics):
             self.logger.debug("Creating context")
             use_cache = False if args.no_cache else True
             use_autotuning = False if args.no_autotuning else True
-            self.shell.user_ns[args.name] = CudaContext.CudaContext(context_flags=context_flags, use_cache=use_cache, autotuning=use_autotuning)
-        
+            self.shell.user_ns[args.name] = CudaContext(context_flags=context_flags, use_cache=use_cache,
+                                                                    autotuning=use_autotuning)
+
         # this function will be called on exceptions in any cell
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             self.logger.exception("Exception caught: Resetting to CUDA context %s", args.name)
-            while (cuda.Context.get_current() != None):
+            while cuda.Context.get_current() is not None:
                 context = cuda.Context.get_current()
                 self.logger.info("Popping <%s>", str(context.handle))
                 cuda.Context.pop()
@@ -77,36 +78,30 @@ class MagicCudaContext(Magics):
                 self.logger.error("CUDA will not work now")
 
             self.logger.debug("==================================================================")
-            
+
             # still show the error within the notebook, don't just swallow it
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
 
         # this registers a custom exception handler for the whole current notebook
         get_ipython().set_custom_exc((Exception,), custom_exc)
-        
-        
+
         # Handle CUDA context when exiting python
         import atexit
         def exitfunc():
             self.logger.info("Exitfunc: Resetting CUDA context stack")
-            while (cuda.Context.get_current() != None):
+            while cuda.Context.get_current() != None:
                 context = cuda.Context.get_current()
                 self.logger.info("`-> Popping <%s>", str(context.handle))
                 cuda.Context.pop()
             self.logger.debug("==================================================================")
+
         atexit.register(exitfunc)
-        
-        
-        
-        
-        
-        
-        
-        
+
+
 @magics_class
-class MagicLogger(Magics): 
+class MagicLogger(Magics):
     logger_initialized = False
-    
+
     @line_magic
     @magic_arguments.magic_arguments()
     @magic_arguments.argument(
@@ -118,51 +113,47 @@ class MagicLogger(Magics):
     @magic_arguments.argument(
         '--file_level', '-f', type=int, default=10, help='The level of logging to file [0, 50]')
     def setup_logging(self, line):
-        if (self.logger_initialized):
+        if self.logger_initialized:
             logging.getLogger('GPUSimulators').info("Global logger already initialized!")
-            return;
+            return
         else:
             self.logger_initialized = True
-            
+
             args = magic_arguments.parse_argstring(self.setup_logging, line)
             import sys
-            
-            #Get root logger
+
+            # Get root logger
             logger = logging.getLogger('GPUSimulators')
             logger.setLevel(min(args.level, args.file_level))
 
-            #Add log to screen
+            # Add log to screen
             ch = logging.StreamHandler()
             ch.setLevel(args.level)
             logger.addHandler(ch)
             logger.log(args.level, "Console logger using level %s", logging.getLevelName(args.level))
-            
-            #Get the outfilename (try to evaluate if Python expression...)
+
+            # Get the outfilename (try to evaluate if Python expression...)
             try:
                 outfile = eval(args.out, self.shell.user_global_ns, self.shell.user_ns)
             except:
                 outfile = args.out
-            
-            #Add log to file
+
+            # Add log to file
             logger.log(args.level, "File logger using level %s to %s", logging.getLevelName(args.file_level), outfile)
-            
+
             fh = logging.FileHandler(outfile)
             formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s')
             fh.setFormatter(formatter)
             fh.setLevel(args.file_level)
             logger.addHandler(fh)
-        
+
         logger.info("Python version %s", sys.version)
         self.shell.user_ns[args.name] = logger
 
 
-
-        
-
-
 @magics_class
-class MagicMPI(Magics): 
-    
+class MagicMPI(Magics):
+
     @line_magic
     @magic_arguments.magic_arguments()
     @magic_arguments.argument(
@@ -177,13 +168,7 @@ class MagicMPI(Magics):
             self.shell.user_ns[args.name].shutdown()
             self.shell.user_ns[args.name] = None
             gc.collect()
-        self.shell.user_ns[args.name] = Common.IPEngine(args.num_engines)
-
-        
-
-
-
-
+        self.shell.user_ns[args.name] = IPEngine(args.num_engines)
 
 
 # Register 
@@ -191,4 +176,3 @@ ip = get_ipython()
 ip.register_magics(MagicCudaContext)
 ip.register_magics(MagicLogger)
 ip.register_magics(MagicMPI)
-

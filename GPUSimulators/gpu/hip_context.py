@@ -3,10 +3,10 @@ import io
 import os.path
 
 import hip as hip_main
-from hip import hip, hiprtc
+from hip import hip
 
-from GPUSimulators import Common
-from GPUSimulators.gpu.Context import Context
+from GPUSimulators.common import common
+from GPUSimulators.gpu.context import Context
 
 
 class HIPContext(Context):

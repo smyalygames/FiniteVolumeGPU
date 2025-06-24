@@ -25,7 +25,8 @@ import gc
 import logging
 
 #Simulator engine etc
-from GPUSimulators import SHMEMSimulatorGroup, Common
+from GPUSimulators import SHMEMSimulatorGroup
+from GPUSimulators.common import common
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
@@ -99,7 +100,7 @@ def genSim(sims, grid, **kwargs):
     sim = SHMEMSimulatorGroup.SHMEMSimulatorGroup(sims, grid)
     return sim
 
-outfile = Common.runSimulation(genSim, arguments, outfile, save_times, save_var_names)
+outfile = Common.run_simulation(genSim, arguments, outfile, save_times, save_var_names)
 
 
 

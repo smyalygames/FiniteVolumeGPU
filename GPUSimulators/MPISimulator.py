@@ -222,7 +222,7 @@ class MPISimulator(Simulator.BaseSimulator):
         
         autotuner = sim.context.autotuner
         sim.context.autotuner = None;
-        boundary_conditions = sim.getBoundaryConditions()
+        boundary_conditions = sim.get_boundary_conditions()
         super().__init__(sim.context, 
             sim.nx, sim.ny, 
             sim.dx, sim.dy, 
@@ -263,14 +263,14 @@ class MPISimulator(Simulator.BaseSimulator):
         if (gj == grid.grid[1]-1 and boundary_conditions.north != Simulator.BoundaryCondition.Type.Periodic):
             self.north = None
             new_boundary_conditions.north = boundary_conditions.north;
-        sim.setBoundaryConditions(new_boundary_conditions)
+        sim.set_boundary_conditions(new_boundary_conditions)
                 
         #Get number of variables
-        self.nvars = len(self.getOutput().gpu_variables)
+        self.nvars = len(self.get_output().gpu_variables)
         
         #Shorthands for computing extents and sizes
-        gc_x = int(self.sim.getOutput()[0].x_halo)
-        gc_y = int(self.sim.getOutput()[0].y_halo)
+        gc_x = int(self.sim.get_output()[0].x_halo)
+        gc_y = int(self.sim.get_output()[0].y_halo)
         nx = int(self.sim.nx)
         ny = int(self.sim.ny)
         
@@ -322,7 +322,7 @@ class MPISimulator(Simulator.BaseSimulator):
         #nvtx.mark("substep full", color="blue")
         #self.sim.substep(dt, step_number, external=True, internal=True)
 
-        self.sim.swapBuffers()
+        self.sim.swap_buffers()
 
         self.profiling_data_mpi["end"]["t_mpi_step"] += time.time()
         
@@ -336,8 +336,8 @@ class MPISimulator(Simulator.BaseSimulator):
         
         self.profiling_data_mpi["n_time_steps"] += 1
 
-    def getOutput(self):
-        return self.sim.getOutput()
+    def get_output(self):
+        return self.sim.get_output()
         
     def synchronize(self):
         self.sim.synchronize()
@@ -345,14 +345,14 @@ class MPISimulator(Simulator.BaseSimulator):
     def check(self):
         return self.sim.check()
         
-    def computeDt(self):
-        local_dt = np.array([np.float32(self.sim.computeDt())]);
+    def compute_dt(self):
+        local_dt = np.array([np.float32(self.sim.compute_dt())]);
         global_dt = np.empty(1, dtype=np.float32)
         self.grid.comm.Allreduce(local_dt, global_dt, op=MPI.MIN)
         self.logger.debug("Local dt: {:f}, global dt: {:f}".format(local_dt[0], global_dt[0]))
         return global_dt[0]
         
-    def getExtent(self):
+    def get_extent(self):
         """
         Function which returns the extent of node with rank 
         rank in the grid
