@@ -29,7 +29,7 @@ from GPUSimulators import Simulator
 from GPUSimulators.Simulator import BoundaryCondition
 
 
-class FORCE(Simulator.BaseSimulator):
+class Force(Simulator.BaseSimulator):
     """
     Class that solves the SW equations 
     """

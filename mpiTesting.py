@@ -36,7 +36,7 @@ import pycuda.driver as cuda
 from GPUSimulators import MPISimulator
 from GPUSimulators.common import run_simulation, get_git_hash, get_git_status
 from GPUSimulators.gpu import CudaContext
-from GPUSimulators import EE2D_KP07_dimsplit
+from GPUSimulators.model import EE2DKP07Dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
 import argparse
@@ -137,7 +137,7 @@ logger.info("Running simulation")
 
 
 def genSim(grid, **kwargs):
-    local_sim = EE2D_KP07_dimsplit.EE2D_KP07_dimsplit(**kwargs)
+    local_sim = EE2DKP07Dimsplit(**kwargs)
     sim = MPISimulator.MPISimulator(local_sim, grid)
     return sim
 

@@ -29,7 +29,7 @@ import pycuda.driver as cuda
 # Simulator engine etc
 from GPUSimulators.common import run_simulation
 from GPUSimulators.gpu import CudaContext
-from GPUSimulators import EE2D_KP07_dimsplit
+from GPUSimulators.model import EE2DKP07Dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
 import argparse
@@ -96,7 +96,7 @@ logger.info("Running simulation")
 
 
 def gen_sim(**kwargs):
-    local_sim = EE2D_KP07_dimsplit.EE2D_KP07_dimsplit(**kwargs)
+    local_sim = EE2DKP07Dimsplit(**kwargs)
     return local_sim
 
 

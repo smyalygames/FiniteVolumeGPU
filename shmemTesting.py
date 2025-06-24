@@ -25,8 +25,8 @@ import logging
 
 # Simulator engine etc
 from GPUSimulators import SHMEMSimulatorGroup
-from GPUSimulators.common import common, run_simulation
-from GPUSimulators import EE2D_KP07_dimsplit
+from GPUSimulators.common import run_simulation
+from GPUSimulators.model import EE2DKP07Dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
 ####
@@ -83,7 +83,7 @@ for i in range(grid.ngpus):
     arguments['context'] = grid.cuda_contexts[i]
     arguments['theta'] = 1.2
 
-    sims.append(EE2D_KP07_dimsplit.EE2D_KP07_dimsplit(**arguments))
+    sims.append(EE2DKP07Dimsplit(**arguments))
     # sims[i] = SHMEMSimulator(i, local_sim, grid) # 1st attempt: no wrapper (per sim)
 
 arguments['sims'] = sims

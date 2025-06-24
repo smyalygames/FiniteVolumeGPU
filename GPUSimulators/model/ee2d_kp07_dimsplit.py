@@ -27,7 +27,7 @@ from GPUSimulators.common import ArakawaA2D
 from GPUSimulators.Simulator import BaseSimulator, BoundaryCondition
 
 
-class EE2D_KP07_dimsplit(BaseSimulator):
+class EE2DKP07Dimsplit(BaseSimulator):
     """
     Class that solves the SW equations using the Forward-Backward linear scheme
     """

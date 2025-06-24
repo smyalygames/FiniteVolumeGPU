@@ -33,7 +33,7 @@ from GPUSimulators.common import ArakawaA2D
 from GPUSimulators.Simulator import BoundaryCondition
 
 
-class KP07_dimsplit(Simulator.BaseSimulator):
+class KP07Dimsplit(Simulator.BaseSimulator):
     """
     Class that solves the SW equations using the dimentionally split KP07 scheme
     """
