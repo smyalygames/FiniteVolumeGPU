@@ -32,7 +32,7 @@ import pycuda.gpuarray
 import pycuda.driver as cuda
 
 from GPUSimulators import Autotuner
-from GPUSimulators.common import common
+from GPUSimulators.common import Timer
 
 
 class CudaContext(object):
@@ -274,7 +274,7 @@ class CudaContext(object):
                     file.write(kernel_string)
                 
             
-            with Common.Timer("compiler") as timer:
+            with Timer("compiler") as timer:
                 import warnings
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", message="The CUDA compiler succeeded, but said the following:\nkernel.cu", category=UserWarning)

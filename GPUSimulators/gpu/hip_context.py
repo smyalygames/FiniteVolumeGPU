@@ -5,7 +5,7 @@ import os.path
 import hip as hip_main
 from hip import hip
 
-from GPUSimulators.common import common
+from GPUSimulators.common import Timer
 from GPUSimulators.gpu.context import Context
 
 
@@ -137,7 +137,7 @@ class HIPContext(Context):
                 with io.open(cached_kernel_filename + ".txt", "w") as file:
                     file.write(kernel_string)
 
-            with Common.Timer("compiler") as timer:
+            with Timer("compiler") as timer:
                 import warnings
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", message="The CUDA compiler succeeded, but said the following:\nkernel.cu", category=UserWarning)
