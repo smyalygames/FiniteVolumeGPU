@@ -37,7 +37,7 @@ from GPUSimulators import MPISimulator
 from GPUSimulators.common import run_simulation, get_git_hash, get_git_status
 from GPUSimulators.gpu import CudaContext
 from GPUSimulators.model import EE2DKP07Dimsplit
-from GPUSimulators.helpers import InitialConditions as IC
+from GPUSimulators.helpers import initial_conditions as IC
 
 import argparse
 
@@ -117,7 +117,7 @@ save_times = np.linspace(0, 0.0000999, 2)
 outfile = "mpi_out_" + str(MPI.COMM_WORLD.rank) + ".nc"
 save_var_names = ['rho', 'rho_u', 'rho_v', 'E']
 
-arguments = IC.genKelvinHelmholtz(nx, ny, gamma, grid=grid)
+arguments = IC.gen_kelvin_helmholtz(nx, ny, gamma, grid=grid)
 arguments['context'] = cuda_context
 arguments['theta'] = 1.2
 arguments['grid'] = grid

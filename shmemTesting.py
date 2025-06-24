@@ -27,7 +27,7 @@ import logging
 from GPUSimulators import SHMEMSimulatorGroup
 from GPUSimulators.common import run_simulation
 from GPUSimulators.model import EE2DKP07Dimsplit
-from GPUSimulators.helpers import InitialConditions as IC
+from GPUSimulators.helpers import initial_conditions as IC
 
 ####
 # Initialize logging
@@ -79,7 +79,7 @@ logger.info("Running simulation")
 
 sims = []
 for i in range(grid.ngpus):
-    arguments = IC.genKelvinHelmholtz(nx, ny, gamma, grid=grid, index=i)
+    arguments = IC.gen_kelvin_helmholtz(nx, ny, gamma, grid=grid, index=i)
     arguments['context'] = grid.cuda_contexts[i]
     arguments['theta'] = 1.2
 
