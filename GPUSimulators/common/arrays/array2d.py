@@ -37,3 +37,13 @@ class BaseArray2D(object):
 
         if np.isfortran(cpu_data):
             raise TypeError("Wrong datatype (Fortran, expected C)")
+
+    def check(self, x, y, nx, ny, cpu_data):
+        if nx != cpu_data.shape[1]:
+            raise ValueError
+        if ny != cpu_data.shape[0]:
+            raise ValueError
+        if x + nx > self.nx + 2 * self.x_halo:
+            raise ValueError
+        if y + ny > self.ny + 2 * self.y_halo:
+            raise ValueError

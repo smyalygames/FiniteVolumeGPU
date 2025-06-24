@@ -58,10 +58,7 @@ class CudaArray2D(BaseArray2D):
             # Non-pagelocked: cpu_data = np.empty((ny, nx), dtype=np.float32)
             # cpu_data = self.memorypool.allocate((ny, nx), dtype=np.float32)
 
-        assert nx == cpu_data.shape[1]
-        assert ny == cpu_data.shape[0]
-        assert x + nx <= self.nx + 2 * self.x_halo
-        assert y + ny <= self.ny + 2 * self.y_halo
+        self.check(x, y, nx, ny, cpu_data)
 
         # Create a copy object from device to host
         copy = cuda.Memcpy2D()
@@ -93,10 +90,7 @@ class CudaArray2D(BaseArray2D):
         else:
             x, y, nx, ny = extent
 
-        assert (nx == cpu_data.shape[1])
-        assert (ny == cpu_data.shape[0])
-        assert (x + nx <= self.nx + 2 * self.x_halo)
-        assert (y + ny <= self.ny + 2 * self.y_halo)
+        self.check(x, y, nx, ny, cpu_data)
 
         # Create a copy object from device to host
         copy = cuda.Memcpy2D()
