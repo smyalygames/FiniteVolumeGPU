@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import numpy as np
 import gc
 import logging
@@ -28,16 +27,16 @@ import logging
 import pycuda.driver as cuda
 
 # Simulator engine etc
-from GPUSimulators.common import common
-from GPUSimulators.gpu import cuda_context
+from GPUSimulators.common import run_simulation
+from GPUSimulators.gpu import CudaContext
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
 import argparse
+
 parser = argparse.ArgumentParser(description='Single GPU testing.')
 parser.add_argument('-nx', type=int, default=128)
 parser.add_argument('-ny', type=int, default=128)
-
 
 args = parser.parse_args()
 
@@ -53,8 +52,7 @@ logger.setLevel(min(log_level_console, log_level_file))
 ch = logging.StreamHandler()
 ch.setLevel(log_level_console)
 logger.addHandler(ch)
-logger.info("Console logger using level %s",
-            logging.getLevelName(log_level_console))
+logger.info(f"Console logger using level {logging.getLevelName(log_level_console)}")
 
 fh = logging.FileHandler(log_filename)
 formatter = logging.Formatter(
@@ -62,17 +60,14 @@ formatter = logging.Formatter(
 fh.setFormatter(formatter)
 fh.setLevel(log_level_file)
 logger.addHandler(fh)
-logger.info("File logger using level %s to %s",
-            logging.getLevelName(log_level_file), log_filename)
-
+logger.info(f"File logger using level {logging.getLevelName(log_level_file)} to {log_filename}")
 
 ####
 # Initialize CUDA
 ####
 cuda.init(flags=0)
 logger.info("Initializing CUDA")
-cuda_context = CudaContext.CudaContext(autotuning=False)
-
+cuda_context = CudaContext(autotuning=False)
 
 ####
 # Set initial conditions
@@ -91,21 +86,22 @@ arguments = IC.genKelvinHelmholtz(nx, ny, gamma)
 arguments['context'] = cuda_context
 arguments['theta'] = 1.2
 
-
 ####
 # Run simulation
 ####
 logger.info("Running simulation")
+
+
 # Helper function to create MPI simulator
 
 
-def genSim(**kwargs):
+def gen_sim(**kwargs):
     local_sim = EE2D_KP07_dimsplit.EE2D_KP07_dimsplit(**kwargs)
     return local_sim
 
 
-outfile = Common.run_simulation(
-    genSim, arguments, outfile, save_times, save_var_names)
+outfile = run_simulation(
+    gen_sim, arguments, outfile, save_times, save_var_names)
 
 ####
 # Clean shutdown
@@ -115,8 +111,6 @@ cuda_context = None
 arguments = None
 logging.shutdown()
 gc.collect()
-
-
 
 ####
 # Print completion and exit

@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import numpy as np
 import gc
 import time
@@ -35,30 +34,28 @@ import pycuda.driver as cuda
 
 # Simulator engine etc
 from GPUSimulators import MPISimulator
-from GPUSimulators.common import common
-from GPUSimulators.gpu import cuda_context
+from GPUSimulators.common import run_simulation, get_git_hash, get_git_status
+from GPUSimulators.gpu import CudaContext
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
 import argparse
+
 parser = argparse.ArgumentParser(description='Strong and weak scaling experiments.')
 parser.add_argument('-nx', type=int, default=128)
 parser.add_argument('-ny', type=int, default=128)
-parser.add_argument('--profile', action='store_true') # default: False
-
+parser.add_argument('--profile', action='store_true')  # default: False
 
 args = parser.parse_args()
 
-if(args.profile):
+if args.profile:
     profiling_data = {}
     # profiling: total run time
     t_total_start = time.time()
     t_init_start = time.time()
 
-
 # Get MPI COMM to use
 comm = MPI.COMM_WORLD
-
 
 ####
 # Initialize logging
@@ -72,8 +69,7 @@ logger.setLevel(min(log_level_console, log_level_file))
 ch = logging.StreamHandler()
 ch.setLevel(log_level_console)
 logger.addHandler(ch)
-logger.info("Console logger using level %s",
-            logging.getLevelName(log_level_console))
+logger.info(f"Console logger using level {logging.getLevelName(log_level_console)}")
 
 fh = logging.FileHandler(log_filename)
 formatter = logging.Formatter(
@@ -81,16 +77,13 @@ formatter = logging.Formatter(
 fh.setFormatter(formatter)
 fh.setLevel(log_level_file)
 logger.addHandler(fh)
-logger.info("File logger using level %s to %s",
-            logging.getLevelName(log_level_file), log_filename)
-
+logger.info(f"File logger using level {logging.getLevelName(log_level_file)} to {log_filename}")
 
 ####
 # Initialize MPI grid etc
 ####
 logger.info("Creating MPI grid")
 grid = MPISimulator.MPIGrid(MPI.COMM_WORLD)
-
 
 ####
 # Initialize CUDA
@@ -100,9 +93,8 @@ logger.info("Initializing CUDA")
 local_rank = grid.get_local_rank()
 num_cuda_devices = cuda.Device.count()
 cuda_device = local_rank % num_cuda_devices
-logger.info("Process %s using CUDA device %s", str(local_rank), str(cuda_device))
-cuda_context = CudaContext.CudaContext(device=cuda_device, autotuning=False)
-
+logger.info(f"Process {str(local_rank)} using CUDA device {str(cuda_device)}")
+cuda_context = CudaContext(device=cuda_device, autotuning=False)
 
 ####
 # Set initial conditions
@@ -118,9 +110,9 @@ ny = args.ny
 dt = 0.000001
 
 gamma = 1.4
-#save_times = np.linspace(0, 0.000009, 2)
-#save_times = np.linspace(0, 0.000099, 11)
-#save_times = np.linspace(0, 0.000099, 2)
+# save_times = np.linspace(0, 0.000009, 2)
+# save_times = np.linspace(0, 0.000099, 11)
+# save_times = np.linspace(0, 0.000099, 2)
 save_times = np.linspace(0, 0.0000999, 2)
 outfile = "mpi_out_" + str(MPI.COMM_WORLD.rank) + ".nc"
 save_var_names = ['rho', 'rho_u', 'rho_v', 'E']
@@ -130,7 +122,7 @@ arguments['context'] = cuda_context
 arguments['theta'] = 1.2
 arguments['grid'] = grid
 
-if(args.profile):
+if args.profile:
     t_init_end = time.time()
     t_init = t_init_end - t_init_start
     profiling_data["t_init"] = t_init
@@ -139,6 +131,8 @@ if(args.profile):
 # Run simulation
 ####
 logger.info("Running simulation")
+
+
 # Helper function to create MPI simulator
 
 
@@ -148,27 +142,29 @@ def genSim(grid, **kwargs):
     return sim
 
 
-outfile, sim_runner_profiling_data, sim_profiling_data = Common.run_simulation(
+outfile, sim_runner_profiling_data, sim_profiling_data = run_simulation(
     genSim, arguments, outfile, save_times, save_var_names, dt)
 
-if(args.profile):
+if args.profile:
     t_total_end = time.time()
     t_total = t_total_end - t_total_start
     profiling_data["t_total"] = t_total
-    print("Total run time on rank " + str(MPI.COMM_WORLD.rank) + " is " + str(t_total) + " s")
+    print(f"Total run time on rank {str(MPI.COMM_WORLD.rank)} is {str(t_total)} s")
 
-# write profiling to json file
-if(args.profile and MPI.COMM_WORLD.rank == 0):
+# write profiling to JSON file
+if args.profile and MPI.COMM_WORLD.rank == 0:
     job_id = ""
     if "SLURM_JOB_ID" in os.environ:
         job_id = int(os.environ["SLURM_JOB_ID"])
         allocated_nodes = int(os.environ["SLURM_JOB_NUM_NODES"])
         allocated_gpus = int(os.environ["CUDA_VISIBLE_DEVICES"].count(",") + 1)
         profiling_file = "MPI_jobid_" + \
-            str(job_id) + "_" + str(allocated_nodes) + "_nodes_and_" + str(allocated_gpus) + "_GPUs_profiling.json"
+                         str(job_id) + "_" + str(allocated_nodes) + "_nodes_and_" + str(
+            allocated_gpus) + "_GPUs_profiling.json"
         profiling_data["outfile"] = outfile
     else:
-        profiling_file = "MPI_" + str(MPI.COMM_WORLD.size) + "_procs_and_" + str(num_cuda_devices) + "_GPUs_profiling.json"
+        profiling_file = "MPI_" + str(MPI.COMM_WORLD.size) + "_procs_and_" + str(
+            num_cuda_devices) + "_GPUs_profiling.json"
 
     for stage in sim_runner_profiling_data["start"].keys():
         profiling_data[stage] = sim_runner_profiling_data["end"][stage] - sim_runner_profiling_data["start"][stage]
@@ -184,8 +180,8 @@ if(args.profile and MPI.COMM_WORLD.rank == 0):
     profiling_data["slurm_job_id"] = job_id
     profiling_data["n_cuda_devices"] = str(num_cuda_devices)
     profiling_data["n_processes"] = str(MPI.COMM_WORLD.size)
-    profiling_data["git_hash"] = Common.get_git_hash()
-    profiling_data["git_status"] = Common.get_git_status()
+    profiling_data["git_hash"] = get_git_hash()
+    profiling_data["git_status"] = get_git_status()
 
     with open(profiling_file, "w") as write_file:
         json.dump(profiling_data, write_file)
@@ -199,8 +195,6 @@ cuda_context = None
 arguments = None
 logging.shutdown()
 gc.collect()
-
-
 
 ####
 # Print completion and exit

@@ -19,22 +19,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import numpy as np
 import gc
 import logging
 
-#Simulator engine etc
+# Simulator engine etc
 from GPUSimulators import SHMEMSimulatorGroup
-from GPUSimulators.common import common
+from GPUSimulators.common import common, run_simulation
 from GPUSimulators import EE2D_KP07_dimsplit
 from GPUSimulators.helpers import InitialConditions as IC
 
 ####
-#Initialize logging 
+# Initialize logging
 ####
 log_level_console = 20
-log_level_file    = 10
+log_level_file = 10
 log_filename = 'shmem.log'
 logger = logging.getLogger('GPUSimulators')
 logger.setLevel(min(log_level_console, log_level_file))
@@ -42,16 +41,14 @@ logger.setLevel(min(log_level_console, log_level_file))
 ch = logging.StreamHandler()
 ch.setLevel(log_level_console)
 logger.addHandler(ch)
-logger.info("Console logger using level %s", logging.getLevelName(log_level_console))
+logger.info(f"Console logger using level {logging.getLevelName(log_level_console)}")
 
 fh = logging.FileHandler(log_filename)
 formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s')
 fh.setFormatter(formatter)
 fh.setLevel(log_level_file)
 logger.addHandler(fh)
-logger.info("File logger using level %s to %s", logging.getLevelName(log_level_file), log_filename)
-
-
+logger.info(f"File logger using level {logging.getLevelName(log_level_file)} to {log_filename}")
 
 ####
 # Initialize SHMEM grid etc
@@ -59,10 +56,8 @@ logger.info("File logger using level %s to %s", logging.getLevelName(log_level_f
 
 logger.info("Creating SHMEM grid")
 
-# XXX: need to explicitly set ngpus when testing on single-GPU system
-grid = SHMEMSimulatorGroup.SHMEMGrid(ngpus=4) 
-
-
+# XXX: need to explicitly set ngpus when testing on a single-GPU system
+grid = SHMEMSimulatorGroup.SHMEMGrid(ngpus=4)
 
 ####
 # Set initial conditions
@@ -71,7 +66,7 @@ logger.info("Generating initial conditions")
 nx = 128
 ny = 128
 gamma = 1.4
-#save_times = np.linspace(0, 0.01, 10)
+# save_times = np.linspace(0, 0.01, 10)
 save_times = np.linspace(0, 10, 10)
 save_var_names = ['rho', 'rho_u', 'rho_v', 'E']
 
@@ -89,20 +84,20 @@ for i in range(grid.ngpus):
     arguments['theta'] = 1.2
 
     sims.append(EE2D_KP07_dimsplit.EE2D_KP07_dimsplit(**arguments))
-    #sims[i] = SHMEMSimulator(i, local_sim, grid) # 1st attempt: no wrapper (per sim)
+    # sims[i] = SHMEMSimulator(i, local_sim, grid) # 1st attempt: no wrapper (per sim)
 
 arguments['sims'] = sims
 arguments['grid'] = grid
 
-#Helper function to create SHMEM simulator
-def genSim(sims, grid, **kwargs):
+
+# Helper function to create SHMEM simulator
+def gen_sim(sims, grid, **kwargs):
     # XXX: kwargs not used, since the simulators are already instantiated in the for-loop above
     sim = SHMEMSimulatorGroup.SHMEMSimulatorGroup(sims, grid)
     return sim
 
-outfile = Common.run_simulation(genSim, arguments, outfile, save_times, save_var_names)
 
-
+outfile = run_simulation(gen_sim, arguments, outfile, save_times, save_var_names)
 
 ####
 # Clean shutdown
@@ -113,8 +108,6 @@ cuda_context = None
 arguments = None
 logging.shutdown()
 gc.collect()
-
-
 
 ####
 # Print completion and exit
