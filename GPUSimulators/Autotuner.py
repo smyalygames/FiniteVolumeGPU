@@ -46,7 +46,7 @@ def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
         sim = simulator(**arguments)
     except:
         # An exception raised - not possible to continue
-        logger.debug("Failed creating %s with arguments %s", simulator.__name__, str(arguments))
+        logger.debug(f"Failed creating {simulator.__name__} with arguments {str(arguments)}")
         # raise RuntimeError("Failed creating %s with arguments %s", simulator.__name__, str(arguments))
         return np.nan
 
@@ -183,7 +183,7 @@ class Autotuner:
                  block_widths=range(8, 32, 1),
                  block_heights=range(8, 32, 1)):
         logger = logging.getLogger(__name__)
-        self.filename = "autotuning_data_" + gethostname() + ".npz"
+        self.filename = f"autotuning_data_{gethostname()}.npz"
         self.nx = nx
         self.ny = ny
         self.block_widths = block_widths
@@ -195,13 +195,13 @@ class Autotuner:
 
         # Run through simulators and benchmark
         key = str(simulator.__name__)
-        logger.info("Benchmarking %s to %s", key, self.filename)
+        logger.info(f"Benchmarking {key} to {self.filename}")
 
         # If this simulator has been benchmarked already, skip it
         if force == False and os.path.isfile(self.filename):
             with np.load(self.filename) as data:
                 if key in data["simulators"]:
-                    logger.info("%s already benchmarked - skipping", key)
+                    logger.info(f"{key} already benchmarked - skipping")
                     return
 
         # Set arguments to send to the simulators during construction
@@ -258,12 +258,12 @@ class Autotuner:
         else:
             # Run simulation if required
             if not os.path.isfile(self.filename):
-                logger.debug("Could not get autotuned peak performance for %s: benchmarking", key)
+                logger.debug(f"Could not get autotuned peak performance for {key}: benchmarking")
                 self.benchmark(simulator)
 
             with np.load(self.filename) as data:
                 if key not in data['simulators']:
-                    logger.debug("Could not get autotuned peak performance for %s: benchmarking", key)
+                    logger.debug(f"Could not get autotuned peak performance for {key}: benchmarking")
                     data.close()
                     self.benchmark(simulator)
                     data = np.load(self.filename)
@@ -280,7 +280,7 @@ class Autotuner:
                 self.performance[key] = {"block_width": block_widths[i],
                                          "block_height": block_heights[j],
                                          "megacells": megacells[j, i]}
-                logger.debug("Returning %s as peak performance parameters", self.performance[key])
+                logger.debug(f"Returning {self.performance[key]} as peak performance parameters")
                 return self.performance[key]
 
             # This should never happen
