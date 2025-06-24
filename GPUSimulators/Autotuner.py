@@ -20,18 +20,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import gc
-import numpy as np
 import logging
+import os
 from socket import gethostname
+
+import numpy as np
+import pycuda.driver as cuda
 from tqdm.auto import tqdm
 
-import pycuda.driver as cuda
-
 from GPUSimulators import Simulator
-from GPUSimulators.common import common, Timer
-from GPUSimulators.gpu import CudaContext
+from GPUSimulators.common import Timer
+from GPUSimulators.gpu import KernelContext
 
 
 def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
@@ -79,12 +79,12 @@ def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
     sane = sane and sanity_check(-0.2, 0.2)
 
     if sane:
-        logger.debug("%s [%d x %d] succeeded: %f megacells, gpu elapsed %f", simulator.__name__,
-                     arguments["block_width"], arguments["block_height"], megacells, gpu_elapsed)
+        logger.debug(f"{simulator.__name__} [{arguments["block_width"]} x {arguments["block_height"]}] succeeded: "
+                     + f"{megacells} megacells, gpu elapsed {gpu_elapsed}")
         return megacells
     else:
-        logger.debug("%s [%d x %d] failed: gpu elapsed %f", simulator.__name__, arguments["block_width"],
-                     arguments["block_height"], gpu_elapsed)
+        logger.debug(f"{simulator.__name__} [{arguments["block_width"]} x {arguments["block_height"]}] failed: "
+                     + f"gpu elapsed {gpu_elapsed}")
         # raise RuntimeError("%s [%d x %d] failed: gpu elapsed %f", simulator.__name__, arguments["block_width"], arguments["block_height"], gpu_elapsed)
         return np.nan
 
@@ -205,7 +205,7 @@ class Autotuner:
                     return
 
         # Set arguments to send to the simulators during construction
-        context = CudaContext(autotuning=False)
+        context = KernelContext(autotuning=False)
         g = 9.81
         h0, hu0, hv0, dx, dy, dt = gen_test_data(ny=self.ny, g=g)
         arguments = {
