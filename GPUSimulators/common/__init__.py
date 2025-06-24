@@ -1,3 +1,4 @@
+# Objects
 from GPUSimulators.common.arrays.cuda.arkawa2d import ArakawaA2D
 from .common import *
 from GPUSimulators.common.arrays.cuda.array2d import CudaArray2D
@@ -7,3 +8,6 @@ from .ip_engine import IPEngine
 from .popen_file_buffer import PopenFileBuffer
 from .progress_printer import ProgressPrinter
 from .timer import Timer
+
+# Functions
+from .hip_check import hip_check
