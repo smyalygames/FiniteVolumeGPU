@@ -1,10 +1,10 @@
 import pycuda.driver as cuda
 
 from GPUSimulators.gpu import KernelContext
-from . import BaseSimulator, BoundaryCondition
+from . import simulator, BoundaryCondition
 
 
-class CudaSimulator(BaseSimulator):
+class CudaSimulator(simulator.BaseSimulator):
     def __init__(self,
                  context: KernelContext,
                  nx: int, ny: int,

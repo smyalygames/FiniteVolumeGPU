@@ -2,10 +2,10 @@ from hip import hip
 
 from GPUSimulators.common import hip_check
 from GPUSimulators.gpu import KernelContext
-from . import BaseSimulator, BoundaryCondition
+from . import simulator, BoundaryCondition
 
 
-class HIPSimulator(BaseSimulator):
+class HIPSimulator(simulator.BaseSimulator):
     def __init__(self,
                  context: KernelContext,
                  nx: int, ny: int,
