@@ -20,14 +20,14 @@ class CudaArray2D(BaseArray2D):
         super().__init__(nx, ny, x_halo, y_halo, cpu_data)
         # self.logger.debug("Allocating [%dx%d] buffer", self.nx, self.ny)
         # Should perhaps use pycuda.driver.mem_alloc_data.pitch() here
-        self.data = pycuda.gpuarray.zeros((self.ny_halo, self.nx_halo), dtype)
+        self.data = pycuda.gpuarray.zeros(self.shape, dtype)
 
         # For returning to download
         self.memorypool = PageLockedMemoryPool()
 
         # Create a copy object from host to device
-        x = (self.nx_halo - cpu_data.shape[1]) // 2
-        y = (self.ny_halo - cpu_data.shape[0]) // 2
+        x = (self.shape[0] - cpu_data.shape[1]) // 2
+        y = (self.shape[1] - cpu_data.shape[0]) // 2
         self.upload(stream, cpu_data, extent=[x, y, cpu_data.shape[1], cpu_data.shape[0]])
         # self.logger.debug("Buffer <%s> [%dx%d]: Allocated ", int(self.data.gpudata), self.nx, self.ny)
 
