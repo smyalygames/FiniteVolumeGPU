@@ -6,5 +6,3 @@ if __env_name in environ and environ.get(__env_name).lower() == "cuda":
     from .cuda import *
 else:
     from .hip import *
-    # TODO this is temporary, remove
-    from .cuda import array3d

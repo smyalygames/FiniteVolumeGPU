@@ -1,6 +1,6 @@
 import logging
 
-from GPUSimulators.common.arrays import Array2D
+# from .typing import array2d
 
 
 class BaseArakawaA2D(object):
@@ -8,7 +8,7 @@ class BaseArakawaA2D(object):
     A base class to be used to represent an Arakawa A type (unstaggered, logically Cartesian) grid.
     """
 
-    def __init__(self, stream, nx, ny, halo_x, halo_y, cpu_variables):
+    def __init__(self, stream, nx, ny, halo_x, halo_y, cpu_variables, array_type):
         """
         Uploads initial data to the GPU device
         """
@@ -16,7 +16,7 @@ class BaseArakawaA2D(object):
         self.gpu_variables = []
 
         for cpu_variable in cpu_variables:
-            self.gpu_variables += [Array2D(stream, nx, ny, halo_x, halo_y, cpu_variable)]
+            self.gpu_variables += [array_type(stream, nx, ny, halo_x, halo_y, cpu_variable)]
 
     def __getitem__(self, key):
         if type(key) != int:

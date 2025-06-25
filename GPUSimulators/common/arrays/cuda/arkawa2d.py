@@ -1,10 +1,11 @@
 import numpy as np
 import pycuda.gpuarray
 
-from GPUSimulators.common.arrays.arkawa2d import BaseArakawaA2D
+from ..arkawa2d import BaseArakawaA2D
+from .array2d import CudaArray2D
 
 
-class ArakawaA2D(BaseArakawaA2D):
+class CudaArakawaA2D(BaseArakawaA2D):
     """
     A class representing an Arakawa A type (unstaggered, logically Cartesian) grid
     """
@@ -13,7 +14,7 @@ class ArakawaA2D(BaseArakawaA2D):
         """
         Uploads initial data to the GPU device
         """
-        super().__init__(stream, nx, ny, halo_x, halo_y, cpu_variables)
+        super().__init__(stream, nx, ny, halo_x, halo_y, cpu_variables, CudaArray2D)
 
     def check(self):
         """

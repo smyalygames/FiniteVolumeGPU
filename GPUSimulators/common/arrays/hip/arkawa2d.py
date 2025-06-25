@@ -31,7 +31,7 @@ def _sum_array(array: HIPArray2D):
     return result_h
 
 
-class ArakawaA2D(BaseArakawaA2D):
+class HIPArakawaA2D(BaseArakawaA2D):
     """
     A class representing an Arakawa A type (unstaggered, logically Cartesian) grid
     """
@@ -40,7 +40,7 @@ class ArakawaA2D(BaseArakawaA2D):
         """
         Uploads initial data to the GPU device
         """
-        super().__init__(stream, nx, ny, halo_x, halo_y, cpu_variables)
+        super().__init__(stream, nx, ny, halo_x, halo_y, cpu_variables, HIPArray2D)
 
     def check(self):
         """
