@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # Import packages we need
-import numpy as np
 from enum import IntEnum
+
+import numpy as np
 
 
 class BoundaryCondition(object):

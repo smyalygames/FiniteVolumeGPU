@@ -14,6 +14,7 @@ def get_types(bc):
              'west': BoundaryCondition.Type((bc >> 0) & 0x0000000F)}
     return types
 
+
 class BaseSimulator(object):
 
     def __init__(self,
@@ -71,9 +72,9 @@ class BaseSimulator(object):
             int(np.ceil(self.ny / float(self.block_size[1])))
         )
 
-        # Create a CUDA stream
-        self.stream = cuda.Stream()
-        self.internal_stream = cuda.Stream()
+        # Streams to be implemented in respective language classes
+        self.stream = None
+        self.internal_stream = None
 
         # Keep track of simulation time and number of timesteps
         self.t = 0.0
@@ -143,7 +144,7 @@ class BaseSimulator(object):
         return self.get_output().download(self.stream, variables)
 
     def synchronize(self):
-        self.stream.synchronize()
+        raise NotImplementedError("Needs to be implemented in HIP/CUDA subclass")
 
     def sim_time(self):
         return self.t
@@ -159,21 +160,21 @@ class BaseSimulator(object):
         self.boundary_conditions = boundary_conditions.as_coded_int()
 
     def get_boundary_conditions(self):
-        return BoundaryCondition(get_types())
+        return BoundaryCondition(get_types(self.boundary_conditions))
 
     def substep(self, dt, step_number):
         """
         Function which performs one single substep with stepsize dt
         """
 
-        raise (NotImplementedError("Needs to be implemented in subclass"))
+        raise NotImplementedError("Needs to be implemented in subclass")
 
     def get_output(self):
-        raise (NotImplementedError("Needs to be implemented in subclass"))
+        raise NotImplementedError("Needs to be implemented in subclass")
 
     def check(self):
         self.logger.warning("check() is not implemented - please implement")
         # raise(NotImplementedError("Needs to be implemented in subclass"))
 
     def compute_dt(self):
-        raise (NotImplementedError("Needs to be implemented in subclass"))
+        raise NotImplementedError("Needs to be implemented in subclass")
