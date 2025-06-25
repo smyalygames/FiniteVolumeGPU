@@ -28,12 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 from pycuda import gpuarray
 
-from GPUSimulators import Simulator
 from GPUSimulators.common import ArakawaA2D
-from GPUSimulators.Simulator import BoundaryCondition
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 
 
-class KP07Dimsplit(Simulator.BaseSimulator):
+class KP07Dimsplit(BaseSimulator):
     """
     Class that solves the SW equations using the dimentionally split KP07 scheme
     """

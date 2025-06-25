@@ -1,32 +1,8 @@
-# -*- coding: utf-8 -*-
-
-"""
-This python module implements the classical Lax-Friedrichs numerical
-scheme for the shallow water equations
-
-Copyright (C) 2016  SINTEF ICT
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-# Import packages we need
-import numpy as np
 import logging
-from enum import IntEnum
 
-import pycuda.driver as cuda
+import numpy as np
 
+from . import BoundaryCondition
 from GPUSimulators.common import ProgressPrinter
 from GPUSimulators.gpu import KernelContext
 
@@ -37,72 +13,6 @@ def get_types(bc):
              'east': BoundaryCondition.Type((bc >> 8) & 0x0000000F),
              'west': BoundaryCondition.Type((bc >> 0) & 0x0000000F)}
     return types
-
-
-def step_order_to_coded_int(step, order):
-    """
-    Helper function which packs the step and order into a single integer
-    """
-
-    step_order = (step << 16) | (order & 0x0000ffff)
-    # print("Step:  {0:032b}".format(step))
-    # print("Order: {0:032b}".format(order))
-    # print("Mix:   {0:032b}".format(step_order))
-    return np.int32(step_order)
-
-
-class BoundaryCondition(object):
-    """
-    Class for holding boundary conditions for global boundaries
-    """
-
-    class Type(IntEnum):
-        """
-        Enum that describes the different types of boundary conditions
-        WARNING: MUST MATCH THAT OF common.h IN CUDA
-        """
-
-        Dirichlet = 0,
-        Neumann = 1,
-        Periodic = 2,
-        Reflective = 3
-
-    def __init__(self, types: dict[str: Type.Reflective]):
-        """
-        Constructor
-        """
-
-        self.north = types['north']
-        self.south = types['south']
-        self.east = types['east']
-        self.west = types['west']
-
-        if (self.north == BoundaryCondition.Type.Neumann
-                or self.south == BoundaryCondition.Type.Neumann
-                or self.east == BoundaryCondition.Type.Neumann
-                or self.west == BoundaryCondition.Type.Neumann):
-            raise (NotImplementedError("Neumann boundary condition not supported"))
-
-    def __str__(self):
-        return f"[north={str(self.north)}, south={str(self.south)}, east={str(self.east)}, west={str(self.west)}]"
-
-    def as_coded_int(self):
-        """
-        Helper function which packs four boundary conditions into one integer
-        """
-
-        bc = 0
-        bc = bc | (self.north & 0x0000000F) << 24
-        bc = bc | (self.south & 0x0000000F) << 16
-        bc = bc | (self.east & 0x0000000F) << 8
-        bc = bc | (self.west & 0x0000000F) << 0
-
-        # for t in types:
-        #    print("{0:s}, {1:d}, {1:032b}, {1:08b}".format(t, types[t]))
-        # print("bc: {0:032b}".format(bc))
-
-        return np.int32(bc)
-
 
 class BaseSimulator(object):
 
@@ -116,7 +26,7 @@ class BaseSimulator(object):
                  block_width: int, block_height: int):
         """
         Initialization routine
-        
+
         Args:
             context: GPU context to use
             kernel_wrapper: wrapper function of GPU kernel
@@ -173,7 +83,7 @@ class BaseSimulator(object):
         return f"{self.__class__.__name__} [{self.nx}x{self.ny}]"
 
     def simulate(self, t, dt=None):
-        """ 
+        """
         Function which simulates t_end seconds using the step function
         Requires that the step() function is implemented in the subclasses
         """
@@ -218,7 +128,7 @@ class BaseSimulator(object):
     def step(self, dt: int):
         """
         Function which performs one single timestep of size dt
-        
+
         Args:
             dt: Size of each timestep (seconds)
         """

@@ -25,9 +25,11 @@ from mpi4py import MPI
 import time
 
 import pycuda.driver as cuda
+
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 #import nvtx
 
-from GPUSimulators import Simulator
+from GPUSimulators.simulator import boundary
 
 
 def get_grid(num_nodes, num_dims):
@@ -205,7 +207,7 @@ class MPIGrid(object):
         return local_rank
 
 
-class MPISimulator(Simulator.BaseSimulator):
+class MPISimulator(BaseSimulator):
     """
     Class which handles communication between simulators on different MPI nodes
     """
@@ -248,24 +250,24 @@ class MPISimulator(Simulator.BaseSimulator):
         
         #Get coordinate of this node
         #and handle global boundary conditions
-        new_boundary_conditions = Simulator.BoundaryCondition({
-            'north': Simulator.BoundaryCondition.Type.Dirichlet,
-            'south': Simulator.BoundaryCondition.Type.Dirichlet,
-            'east': Simulator.BoundaryCondition.Type.Dirichlet,
-            'west': Simulator.BoundaryCondition.Type.Dirichlet
+        new_boundary_conditions = BoundaryCondition({
+            'north': BoundaryCondition.Type.Dirichlet,
+            'south': BoundaryCondition.Type.Dirichlet,
+            'east': BoundaryCondition.Type.Dirichlet,
+            'west': BoundaryCondition.Type.Dirichlet
         })
         gi, gj = grid.get_coordinate()
         #print("gi: " + str(gi) + ", gj: " + str(gj))
-        if gi == 0 and boundary_conditions.west != Simulator.BoundaryCondition.Type.Periodic:
+        if gi == 0 and boundary_conditions.west != BoundaryCondition.Type.Periodic:
             self.west = None
             new_boundary_conditions.west = boundary_conditions.west
-        if gj == 0 and boundary_conditions.south != Simulator.BoundaryCondition.Type.Periodic:
+        if gj == 0 and boundary_conditions.south != BoundaryCondition.Type.Periodic:
             self.south = None
             new_boundary_conditions.south = boundary_conditions.south
-        if gi == grid.grid[0]-1 and boundary_conditions.east != Simulator.BoundaryCondition.Type.Periodic:
+        if gi == grid.grid[0]-1 and boundary_conditions.east != BoundaryCondition.Type.Periodic:
             self.east = None
             new_boundary_conditions.east = boundary_conditions.east
-        if gj == grid.grid[1]-1 and boundary_conditions.north != Simulator.BoundaryCondition.Type.Periodic:
+        if gj == grid.grid[1]-1 and boundary_conditions.north != BoundaryCondition.Type.Periodic:
             self.north = None
             new_boundary_conditions.north = boundary_conditions.north
         sim.set_boundary_conditions(new_boundary_conditions)

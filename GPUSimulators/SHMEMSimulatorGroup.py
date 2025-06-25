@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import logging
-from GPUSimulators import Simulator
-from GPUSimulators.gpu import CudaContext
 import numpy as np
-
 import pycuda.driver as cuda
+
+from GPUSimulators.simulator import BoundaryCondition
+from GPUSimulators.gpu import KernelContext
 
 
 class SHMEMGrid(object):
@@ -63,7 +63,7 @@ class SHMEMGrid(object):
         for i in range(self.ngpus):
             # XXX: disabled for testing on single-GPU system
             #self.cuda_contexts.append(CudaContext(device=i, autotuning=False))
-            self.cuda_contexts.append(CudaContext(device=0, autotuning=False))
+            self.cuda_contexts.append(KernelContext(device=0, autotuning=False))
 
     def getCoordinate(self, index):
         i = (index  % self.grid[0])
@@ -224,23 +224,23 @@ class SHMEMSimulatorGroup(object):
             
             #Get coordinate of this subdomain
             #and handle global boundary conditions
-            new_boundary_conditions = Simulator.BoundaryCondition({
-                'north': Simulator.BoundaryCondition.Type.Dirichlet,
-                'south': Simulator.BoundaryCondition.Type.Dirichlet,
-                'east': Simulator.BoundaryCondition.Type.Dirichlet,
-                'west': Simulator.BoundaryCondition.Type.Dirichlet
+            new_boundary_conditions = BoundaryCondition({
+                'north': BoundaryCondition.Type.Dirichlet,
+                'south': BoundaryCondition.Type.Dirichlet,
+                'east': BoundaryCondition.Type.Dirichlet,
+                'west': BoundaryCondition.Type.Dirichlet
             })
             gi, gj = grid.get_coordinate(i)
-            if (gi == 0 and boundary_conditions.west != Simulator.BoundaryCondition.Type.Periodic):
+            if (gi == 0 and boundary_conditions.west != BoundaryCondition.Type.Periodic):
                 self.west = None
                 new_boundary_conditions.west = boundary_conditions.west;
-            if (gj == 0 and boundary_conditions.south != Simulator.BoundaryCondition.Type.Periodic):
+            if (gj == 0 and boundary_conditions.south != BoundaryCondition.Type.Periodic):
                 self.south = None
                 new_boundary_conditions.south = boundary_conditions.south;
-            if (gi == grid.grid[0]-1 and boundary_conditions.east != Simulator.BoundaryCondition.Type.Periodic):
+            if (gi == grid.grid[0]-1 and boundary_conditions.east != BoundaryCondition.Type.Periodic):
                 self.east = None
                 new_boundary_conditions.east = boundary_conditions.east;
-            if (gj == grid.grid[1]-1 and boundary_conditions.north != Simulator.BoundaryCondition.Type.Periodic):
+            if (gj == grid.grid[1]-1 and boundary_conditions.north != BoundaryCondition.Type.Periodic):
                 self.north = None
                 new_boundary_conditions.north = boundary_conditions.north;
             sim.set_boundary_conditions(new_boundary_conditions)

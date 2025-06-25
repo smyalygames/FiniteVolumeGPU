@@ -23,7 +23,7 @@ import gc
 
 import numpy as np
 
-from GPUSimulators.Simulator import BoundaryCondition
+from GPUSimulators.simulator.boundary import BoundaryCondition
 
 
 def get_extent(width, height, nx, ny, grid, index=None):

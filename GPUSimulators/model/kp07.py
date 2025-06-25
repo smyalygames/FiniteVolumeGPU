@@ -28,12 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 from pycuda import gpuarray
 
-from GPUSimulators import Simulator
 from GPUSimulators.common import ArakawaA2D
-from GPUSimulators.Simulator import BoundaryCondition
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition, conversion
 
 
-class KP07(Simulator.BaseSimulator):
+class KP07(BaseSimulator):
     """
     Class that solves the SW equations using the Forward-Backward linear scheme
     """
@@ -122,7 +121,7 @@ class KP07(Simulator.BaseSimulator):
                                         self.dx, self.dy, dt,
                                         self.g,
                                         self.theta,
-                                        Simulator.step_order_to_coded_int(step=substep, order=self.order),
+                                        conversion.step_order_to_coded_int(step=substep, order=self.order),
                                         self.boundary_conditions,
                                         self.u0[0].data.gpudata, self.u0[0].data.strides[0],
                                         self.u0[1].data.gpudata, self.u0[1].data.strides[0],

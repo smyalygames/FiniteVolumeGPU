@@ -29,7 +29,7 @@ import numpy as np
 import pycuda.driver as cuda
 from tqdm.auto import tqdm
 
-from GPUSimulators import Simulator
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 from GPUSimulators.common import Timer
 from GPUSimulators.gpu import KernelContext
 
@@ -250,7 +250,7 @@ class Autotuner:
 
         logger = logging.getLogger(__name__)
 
-        assert issubclass(simulator, Simulator.BaseSimulator)
+        assert issubclass(simulator, BaseSimulator)
         key = simulator.__name__
 
         if key in self.performance:

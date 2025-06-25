@@ -23,12 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 from pycuda import gpuarray
 
-from GPUSimulators import Simulator
 from GPUSimulators.common import ArakawaA2D
-from GPUSimulators.Simulator import BoundaryCondition
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 
 
-class HLL2(Simulator.BaseSimulator):
+class HLL2(BaseSimulator):
     """
     Class that solves the SW equations using the Forward-Backward linear scheme
     """

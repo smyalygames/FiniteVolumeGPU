@@ -24,7 +24,7 @@ import numpy as np
 from pycuda import gpuarray
 
 from GPUSimulators.common import ArakawaA2D
-from GPUSimulators.Simulator import BaseSimulator, BoundaryCondition
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 
 
 class EE2DKP07Dimsplit(BaseSimulator):

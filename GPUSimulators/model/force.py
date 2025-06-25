@@ -24,12 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 from pycuda import gpuarray
 
-from GPUSimulators import Simulator
 from GPUSimulators.common import ArakawaA2D
-from GPUSimulators.Simulator import BoundaryCondition
+from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 
 
-class Force(Simulator.BaseSimulator):
+class Force(BaseSimulator):
     """
     Class that solves the SW equations 
     """
