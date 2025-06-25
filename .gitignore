@@ -1,3 +1,6 @@
+# Cache directory for kernels from this repository
+/.fvm_cache
+
 .vscode/settings.json
 
 /data

@@ -5,6 +5,8 @@ import re
 import logging
 from hashlib import md5
 
+from GPUSimulators.common.utils import get_project_root
+
 
 class Context(object):
     """
@@ -24,10 +26,10 @@ class Context(object):
         self.autotuner = None
 
         # Creates cache directory if specified
-        self.cache_path = os.path.join(self.module_path, f"{language}_cache")
+        self.cache_path = os.path.join(get_project_root(), ".fvm_cache", type(self).__name__.lower())
         if self.use_cache:
             if not os.path.isdir(self.cache_path):
-                os.mkdir(self.cache_path)
+                os.makedirs(self.cache_path)
             self.logger.info(f"Using cache dir {self.cache_path}")
 
     def __del__(self):
@@ -81,7 +83,7 @@ class Context(object):
                 kernel_hasher.update(str(modified).encode('utf-8'))
 
                 # Find all the includes
-                includes = re.findall('^\W*#include\W+(.+?)\W*$', file_str, re.M)
+                includes = re.findall('^\\W*#include\\W+(.+?)\\W*$', file_str, re.M)
 
             # Iterate through everything that looks like is an ``include``
             for include_file in includes:

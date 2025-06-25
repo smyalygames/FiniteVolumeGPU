@@ -76,6 +76,7 @@ class HIPArray2D(BaseArray2D):
 
         self.check(x, y, nx, ny, cpu_data)
 
+        # TODO implement non-async to test if it actually works - avoid errors
         # Create a copy object from device to host
         hip_check(hip.hipMemcpyAsync(self.data_d, self.data_h, self.num_bytes, hip.hipMemcpyKind.hipMemcpyHostToDevice,
                                      stream))
