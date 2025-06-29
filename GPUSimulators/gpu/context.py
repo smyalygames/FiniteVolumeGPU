@@ -21,7 +21,7 @@ class Context(object):
         self.logger = logging.getLogger(__name__)
         self.modules = {}
 
-        self.module_path = os.path.dirname(os.path.realpath(__file__))
+        self.module_path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + language)
 
         self.autotuner = None
 
