@@ -1,2 +1,2 @@
-import initial_conditions as InitialConditions
-import visualization as Visualization
+from . import initial_conditions as InitialConditions
+from . import visualization as Visualization

@@ -2,16 +2,16 @@ import logging
 
 import numpy as np
 
-from . import BoundaryCondition
+from . import boundary
 from GPUSimulators.common import ProgressPrinter
 from GPUSimulators.gpu import KernelContext
 
 
 def get_types(bc):
-    types = {'north': BoundaryCondition.Type((bc >> 24) & 0x0000000F),
-             'south': BoundaryCondition.Type((bc >> 16) & 0x0000000F),
-             'east': BoundaryCondition.Type((bc >> 8) & 0x0000000F),
-             'west': BoundaryCondition.Type((bc >> 0) & 0x0000000F)}
+    types = {'north': boundary.BoundaryCondition.Type((bc >> 24) & 0x0000000F),
+             'south': boundary.BoundaryCondition.Type((bc >> 16) & 0x0000000F),
+             'east': boundary.BoundaryCondition.Type((bc >> 8) & 0x0000000F),
+             'west': boundary.BoundaryCondition.Type((bc >> 0) & 0x0000000F)}
     return types
 
 
@@ -21,7 +21,7 @@ class BaseSimulator(object):
                  context: KernelContext,
                  nx: int, ny: int,
                  dx: int, dy: int,
-                 boundary_conditions: BoundaryCondition,
+                 boundary_conditions: boundary.BoundaryCondition,
                  cfl_scale: float,
                  num_substeps: int,
                  block_width: int, block_height: int):
@@ -160,7 +160,7 @@ class BaseSimulator(object):
         self.boundary_conditions = boundary_conditions.as_coded_int()
 
     def get_boundary_conditions(self):
-        return BoundaryCondition(get_types(self.boundary_conditions))
+        return boundary.BoundaryCondition(get_types(self.boundary_conditions))
 
     def substep(self, dt, step_number):
         """

@@ -2,7 +2,7 @@ from hip import hip
 
 from GPUSimulators.common import hip_check
 from GPUSimulators.gpu import KernelContext
-from . import simulator, BoundaryCondition
+from . import simulator, boundary
 
 
 class HIPSimulator(simulator.BaseSimulator):
@@ -10,7 +10,7 @@ class HIPSimulator(simulator.BaseSimulator):
                  context: KernelContext,
                  nx: int, ny: int,
                  dx: int, dy: int,
-                 boundary_conditions: BoundaryCondition,
+                 boundary_conditions: boundary.BoundaryCondition,
                  cfl_scale: float,
                  num_substeps: int,
                  block_width: int, block_height: int):
