@@ -6,7 +6,6 @@ import hip as hip_main
 from hip import hip, hiprtc
 
 from GPUSimulators.common import Timer, hip_check
-from GPUSimulators.common.utils import get_includes
 from GPUSimulators.gpu.context import Context
 
 
