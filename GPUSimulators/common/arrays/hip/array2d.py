@@ -1,10 +1,8 @@
-import ctypes
-
 import numpy as np
-from hip import hip, hipblas
+from hip import hip
 
-from GPUSimulators.common import hip_check
-from GPUSimulators.common.arrays.array2d import BaseArray2D
+from ...hip_check import hip_check
+from ..array2d import BaseArray2D
 
 
 class HIPArray2D(BaseArray2D):
@@ -24,7 +22,7 @@ class HIPArray2D(BaseArray2D):
         self.num_bytes = self.data_h.size * self.data_h.itemsize
 
         self.data_d = hip_check(hip.hipMalloc(self.num_bytes)).configure(
-            typestr=np.finfo(dtype).dtype.name, shape=self.shape
+            typestr=np.finfo(self.dtype).dtype.name, shape=self.shape
         )
 
         # Create a copy object from host to device
