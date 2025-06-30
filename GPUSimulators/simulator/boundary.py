@@ -42,10 +42,17 @@ class BoundaryCondition(object):
         Periodic = 2,
         Reflective = 3
 
-    def __init__(self, types: dict[str: Type.Reflective]):
+    def __init__(self, types: dict[str: Type.Reflective]=None):
         """
         Constructor
         """
+        if types is None:
+            types = {
+                    'north': self.Type.Reflective,
+                    'south': self.Type.Reflective,
+                    'east': self.Type.Reflective,
+                    'west': self.Type.Reflective
+                 }
 
         self.north = types['north']
         self.south = types['south']
