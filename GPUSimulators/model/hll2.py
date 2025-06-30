@@ -73,13 +73,17 @@ class HLL2(BaseSimulator):
 
         # Get kernels
         module = context.get_module("SWE2D_HLL2",
+                                    "HLL2Kernel",
                                     defines={
                                         'BLOCK_WIDTH': self.block_size[0],
                                         'BLOCK_HEIGHT': self.block_size[1]
                                     },
                                     compile_args={
-                                        'no_extern_c': True,
-                                        'options': ["--use_fast_math"] + compile_opts,
+                                        'cuda': {
+                                            'no_extern_c': True,
+                                            'options': ["--use_fast_math"] + compile_opts,
+                                        },
+                                        'hip': compile_opts,
                                     },
                                     jit_compile_args={})
         self.kernel = module.get_function("HLL2Kernel")

@@ -204,7 +204,7 @@ class CudaContext(object):
         if defines is None:
             defines = {}
         if include_dirs is None:
-            include_dirs = [os.path.join(self.module_path) + "include"]
+            include_dirs = [os.path.join(self.module_path), "include"]
         if compile_args is None:
             compile_args = {'no_extern_c': True}
         if jit_compile_args is None:

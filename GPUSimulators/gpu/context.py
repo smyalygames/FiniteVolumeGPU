@@ -1,7 +1,6 @@
 import logging
 import os
 import io
-import re
 import logging
 from hashlib import md5
 
@@ -21,7 +20,7 @@ class Context(object):
         self.logger = logging.getLogger(__name__)
         self.modules = {}
 
-        self.module_path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + language)
+        self.module_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), f"{language}")
 
         self.autotuner = None
 
@@ -101,6 +100,7 @@ class Context(object):
         return kernel_hasher.hexdigest()
 
     def get_module(self, kernel_filename: str,
+                   function: str,
                    include_dirs: dict = None,
                    defines: list[str] = None,
                    compile_args: dict = None,

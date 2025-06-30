@@ -42,7 +42,8 @@ class EE2DKP07Dimsplit(BaseSimulator):
                  theta=1.3,
                  cfl_scale=0.9,
                  boundary_conditions=BoundaryCondition(),
-                 block_width=16, block_height=8):
+                 block_width=16, block_height=8,
+                compile_opts: list[str] = []):
         """
         Initialization routine
 
@@ -75,13 +76,17 @@ class EE2DKP07Dimsplit(BaseSimulator):
 
         # Get kernels
         module = context.get_module("EE2D_KP07_dimsplit",
+                                    "KP07DimsplitKernel",
                                     defines={
                                         'BLOCK_WIDTH': self.block_size[0],
                                         'BLOCK_HEIGHT': self.block_size[1]
                                     },
                                     compile_args={
-                                        'no_extern_c': True,
-                                        'options': ["--use_fast_math"],
+                                        'cuda': {
+                                            'no_extern_c': True,
+                                            'options': ["--use_fast_math"] + compile_opts,
+                                        },
+                                        'hip': compile_opts,
                                     },
                                     jit_compile_args={})
         self.kernel = module.get_function("KP07DimsplitKernel")
