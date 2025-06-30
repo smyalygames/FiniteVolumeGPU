@@ -5,7 +5,7 @@ import re
 import logging
 from hashlib import md5
 
-from GPUSimulators.common.utils import get_project_root
+from GPUSimulators.common.utils import get_project_root, get_includes
 
 
 class Context(object):
@@ -83,7 +83,7 @@ class Context(object):
                 kernel_hasher.update(str(modified).encode('utf-8'))
 
                 # Find all the includes
-                includes = re.findall('^\\W*#include\\W+(.+?)\\W*$', file_str, re.M)
+                includes = get_includes(file_str)
 
             # Iterate through everything that looks like is an ``include``
             for include_file in includes:
