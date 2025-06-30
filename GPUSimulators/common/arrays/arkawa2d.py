@@ -1,7 +1,5 @@
 import logging
 
-# from .typing import array2d
-
 
 class BaseArakawaA2D(object):
     """

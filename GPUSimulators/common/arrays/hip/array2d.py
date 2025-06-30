@@ -21,9 +21,13 @@ class HIPArray2D(BaseArray2D):
         self.data_h = np.zeros(self.shape, self.dtype)
         self.num_bytes = self.data_h.size * self.data_h.itemsize
 
-        self.data_d = hip_check(hip.hipMalloc(self.num_bytes)).configure(
+        self.data = hip_check(hip.hipMalloc(self.num_bytes)).configure(
             typestr=np.finfo(self.dtype).dtype.name, shape=self.shape
         )
+
+        # If there is no data to append, just leave this array as allocated
+        if cpu_data is None:
+            return
 
         # Create a copy object from host to device
         x = (self.shape[0] - cpu_data.shape[1]) // 2
@@ -33,7 +37,7 @@ class HIPArray2D(BaseArray2D):
 
     def __del__(self, *args):
         # self.logger.debug("Buffer <%s> [%dx%d]: Releasing ", int(self.data.gpudata), self.nx, self.ny)
-        hip_check(hip.hipFree(self.data_d))
+        hip_check(hip.hipFree(self.data))
 
     def download(self, stream, cpu_data=None, asynch=False, extent=None):
         """
@@ -59,7 +63,7 @@ class HIPArray2D(BaseArray2D):
             hip_check(hip.hipStreamSynchronize(stream))
 
         hip_check(
-            hip.hipMemcpyAsync(self.data_d, cpu_data, self.num_bytes, hip.hipMemcpyKind.hipMemcpyDeviceToHost, stream))
+            hip.hipMemcpyAsync(self.data, cpu_data, self.num_bytes, hip.hipMemcpyKind.hipMemcpyDeviceToHost, stream))
 
         return cpu_data
 
@@ -76,5 +80,5 @@ class HIPArray2D(BaseArray2D):
 
         # TODO implement non-async to test if it actually works - avoid errors
         # Create a copy object from device to host
-        hip_check(hip.hipMemcpyAsync(self.data_d, self.data_h, self.num_bytes, hip.hipMemcpyKind.hipMemcpyHostToDevice,
+        hip_check(hip.hipMemcpyAsync(self.data, self.data_h, self.num_bytes, hip.hipMemcpyKind.hipMemcpyHostToDevice,
                                      stream))
