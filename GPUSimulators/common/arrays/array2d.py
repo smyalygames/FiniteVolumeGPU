@@ -40,6 +40,12 @@ class BaseArray2D(object):
         if np.isfortran(cpu_data):
             raise TypeError("Wrong datatype (Fortran, expected C)")
 
+    def get_strides(self) -> tuple[int, ...]:
+        """
+        Gets the number of bytes it takes to move to the next element.
+        """
+        raise NotImplementedError("This function needs to be implemented in a subclass.")
+
     def check(self, x, y, nx, ny, cpu_data):
         if nx != cpu_data.shape[1]:
             raise ValueError

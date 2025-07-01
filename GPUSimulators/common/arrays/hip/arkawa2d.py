@@ -1,7 +1,7 @@
 import numpy as np
 from hip import hip, hipblas
 
-from ....common import hip_check
+from ...hip_check import hip_check
 from ..arkawa2d import BaseArakawaA2D
 from .array2d import HIPArray2D
 
@@ -13,10 +13,10 @@ def _sum_array(array: HIPArray2D):
         array: A HIPArray2D to compute the sum of.
     """
     data_h = array.data_h
-    num_bytes = array.dtype.itemsize
+    num_bytes = array.num_bytes
 
     result_d = hip_check(hip.hipMalloc(num_bytes))
-    result_h = array.dtype.type(0)
+    result_h = np.zeros(1, dtype=array.dtype)
 
     # Sum the ``data_h`` array using hipblas
     handle = hip_check(hipblas.hipblasCreate())

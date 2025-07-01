@@ -37,5 +37,4 @@ class BaseArakawaA2D(object):
                 raise IndexError(f"Variable {i} is out of range")
             cpu_variables += [self.gpu_variables[i].download(stream, asynch=True)]
 
-        # stream.synchronize()
         return cpu_variables

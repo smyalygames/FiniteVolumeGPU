@@ -108,3 +108,6 @@ class CudaArray2D(BaseArray2D):
         copy.height = int(ny)
 
         copy(stream)
+
+    def get_strides(self) -> tuple[int, ...]:
+        return self.data.strides[0]

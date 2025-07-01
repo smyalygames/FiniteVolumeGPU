@@ -55,15 +55,14 @@ class HIPArray2D(BaseArray2D):
         if cpu_data is None:
             # self.logger.debug("Downloading [%dx%d] buffer", self.nx, self.ny)
             # Allocate host memory
-            cpu_data = np.empty((ny, nx), dtype=self.dtype)
+            cpu_data = np.zeros((ny, nx), dtype=self.dtype)
 
-        self.check(x, y, nx, ny, cpu_data)
+        copy_args = hip.hip_Memcpy2D(**self.__get_copy_info(x, y, nx, ny, cpu_data, True))
+
+        hip_check(hip.hipMemcpyParam2DAsync(copy_args, stream))
 
         if not asynch:
             hip_check(hip.hipStreamSynchronize(stream))
-
-        hip_check(
-            hip.hipMemcpyAsync(self.data, cpu_data, self.num_bytes, hip.hipMemcpyKind.hipMemcpyDeviceToHost, stream))
 
         return cpu_data
 
@@ -76,9 +75,58 @@ class HIPArray2D(BaseArray2D):
         else:
             x, y, nx, ny = extent
 
-        self.check(x, y, nx, ny, cpu_data)
+        copy_param = hip.hip_Memcpy2D(**self.__get_copy_info(x, y, nx, ny, cpu_data))
 
-        # TODO implement non-async to test if it actually works - avoid errors
-        # Create a copy object from device to host
-        hip_check(hip.hipMemcpyAsync(self.data, self.data_h, self.num_bytes, hip.hipMemcpyKind.hipMemcpyHostToDevice,
-                                     stream))
+        hip_check(hip.hipMemcpyParam2DAsync(copy_param, stream))
+
+    def get_strides(self) -> tuple[int, ...]:
+        strides = []
+        for i in range(len(self.data_h.shape)):
+            strides.append(self.data_h.shape[i] * np.float32().itemsize)
+
+        return tuple(strides)
+
+    def __get_copy_info(self, x, y, nx, ny, host, to_host=False):
+        self.check(x, y, nx, ny, host)
+
+        # Arguments for the host data
+        src_args = [
+            'Host',
+            0,
+            0,
+            hip.hipMemoryType.hipMemoryTypeHost,
+            host,
+            host.strides[0]
+
+        ]
+        # Arguments for the device
+        dst_args = [
+            'Device',
+            int(x) * np.float32().itemsize,
+            int(y),
+            hip.hipMemoryType.hipMemoryTypeDevice,
+            self.data,
+            self.get_strides()[0],
+        ]
+
+        if to_host:
+            src_args, dst_args = dst_args, src_args
+
+        args = {
+            'srcXInBytes': src_args[1],
+            'srcY': src_args[2],
+            'srcMemoryType': src_args[3],
+            f'src{src_args[0]}': src_args[4],
+            'srcPitch': src_args[5],
+
+            'dstXInBytes': dst_args[1],
+            'dstY': dst_args[2],
+            'dstMemoryType': dst_args[3],
+            f'dst{dst_args[0]}': dst_args[4],
+            'dstPitch': dst_args[5],
+
+            'WidthInBytes': int(nx) * np.float32().itemsize,
+            'Height': int(ny)
+        }
+
+        return args
