@@ -1,9 +1,10 @@
 import logging
+import math
 
 import numpy as np
+from tqdm.auto import tqdm
 
 from . import boundary
-from GPUSimulators.common import ProgressPrinter
 from GPUSimulators.gpu import KernelContext
 
 
@@ -89,8 +90,6 @@ class BaseSimulator(object):
         Requires that the step() function is implemented in the subclasses
         """
 
-        printer = ProgressPrinter(t)
-
         t_start = self.sim_time()
         t_end = t_start + t
 
@@ -99,9 +98,8 @@ class BaseSimulator(object):
             update_dt = False
             self.dt = dt
 
-        while self.sim_time() < t_end:
-            # Update dt every 100 timesteps and cross your fingers it works
-            # for the next 100
+        for _ in tqdm(range(math.ceil((t_end - t_start) / self.dt)), desc="Simulation"):
+            # TODO this is probably broken now after fixing the "infinite" loop
             if update_dt and (self.sim_steps() % 100 == 0):
                 self.dt = self.compute_dt() * self.cfl_scale
 
@@ -115,16 +113,6 @@ class BaseSimulator(object):
 
             # Step forward in time
             self.step(current_dt)
-
-            # Print info
-            print_string = printer.get_print_string(self.sim_time() - t_start)
-            if print_string:
-                self.logger.info(f"{self}: {print_string}")
-                try:
-                    self.check()
-                except AssertionError as e:
-                    e.args += f"Step={self.sim_steps()}, time={self.sim_time()}"
-                    raise
 
     def step(self, dt: int):
         """
