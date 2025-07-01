@@ -82,7 +82,7 @@ class HIPContext(Context):
 
         compile_args = compile_args.get('hip')
 
-        compile_args = [bytes(arg, "utf-8")for arg in compile_args]
+        compile_args = [bytes(arg, "utf-8") for arg in compile_args]
         compile_args.append(b"--offload-arch=" + self.arch)
 
         def compile_message_handler(compile_success_bool, info_str, error_str):
@@ -166,14 +166,3 @@ class HIPContext(Context):
 
     def synchronize(self):
         hip_check(hip.hipDeviceSynchronize())
-
-
-test = HIPContext()
-
-test.get_module("SWE2D_HLL",
-                "HLLKernel",
-                defines={
-                    'BLOCK_WIDTH': 8,
-                    'BLOCK_HEIGHT': 8
-                },
-                jit_compile_args={})
