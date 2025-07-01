@@ -98,7 +98,7 @@ class BaseSimulator(object):
             update_dt = False
             self.dt = dt
 
-        for _ in tqdm(range(math.ceil((t_end - t_start) / self.dt)), desc="Simulation"):
+        for _ in tqdm(range(math.ceil((t_end - t_start) / self.dt)), desc="Simulation", leave=False):
             # TODO this is probably broken now after fixing the "infinite" loop
             if update_dt and (self.sim_steps() % 100 == 0):
                 self.dt = self.compute_dt() * self.cfl_scale
