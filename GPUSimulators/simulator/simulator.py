@@ -98,21 +98,29 @@ class BaseSimulator(object):
             update_dt = False
             self.dt = dt
 
-        for _ in tqdm(range(math.ceil((t_end - t_start) / self.dt)), desc="Simulation", leave=False):
-            # TODO this is probably broken now after fixing the "infinite" loop
-            if update_dt and (self.sim_steps() % 100 == 0):
-                self.dt = self.compute_dt() * self.cfl_scale
+        prev_time = 0
+        with tqdm(total=t_end, desc="Running Simulator") as pbar:
+            while self.sim_time() < t_end:
+                if update_dt and (self.sim_steps() % 100 == 0):
+                    self.dt = self.compute_dt() * self.cfl_scale
 
-            # Compute timestep for "this" iteration (i.e., shorten last timestep)
-            current_dt = np.float32(min(self.dt, t_end - self.sim_time()))
+                # Compute timestep for "this" iteration (i.e., shorten last timestep)
+                current_dt = np.float32(min(self.dt, t_end - self.sim_time()))
 
-            # Stop if end reached (should not happen)
-            if current_dt <= 0.0:
-                self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
-                break
+                # Stop if end reached (should not happen)
+                if current_dt <= 0.0:
+                    self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
+                    break
 
-            # Step forward in time
-            self.step(current_dt)
+                # Step forward in time
+                self.step(current_dt)
+
+                # Prevent an infinite loop from occurring from tiny numbers
+                if self.sim_time() - prev_time == 0:
+                    self.dt = np.float32(t_end - self.sim_time())
+
+                # Update the progress bar
+                pbar.update(float(current_dt))
 
     def step(self, dt: int):
         """
