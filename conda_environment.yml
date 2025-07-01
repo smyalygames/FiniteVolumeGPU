@@ -13,6 +13,11 @@ dependencies:
 - pytools
 - netcdf4
 - scipy
+- matplotlib
+- ipyparallel
+- jupyter
+- nb_conda_kernels
+- line_profiler
 - tqdm
 - pip:
   - hip-python==6.4.1.552.39

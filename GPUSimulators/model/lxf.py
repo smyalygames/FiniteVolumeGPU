@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Import packages we need
 import numpy as np
-from pycuda import gpuarray
 
 from GPUSimulators.common import ArakawaA2D
 from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
+from GPUSimulators.gpu import GPUHandler
 
 
 class LxF(BaseSimulator):
@@ -85,8 +85,7 @@ class LxF(BaseSimulator):
                                         'hip': compile_opts,
                                     },
                                     jit_compile_args={})
-        self.kernel = module.get_function("LxFKernel")
-        self.kernel.prepare("iiffffiPiPiPiPiPiPiPiiii")
+        self.handler = GPUHandler(context, module, "LxFKernel", "iiffffiPiPiPiPiPiPiPiiii", self.grid_size)
 
         # Create data by uploading to thedevice
         self.u0 = ArakawaA2D(self.stream,
@@ -97,7 +96,6 @@ class LxF(BaseSimulator):
                              nx, ny,
                              1, 1,
                              [None, None, None])
-        self.cfl_data = gpuarray.GPUArray(self.grid_size, dtype=np.float32)
 
         if dt is None:
             dt_x = np.min(self.dx / (np.abs(hu0 / h0) + np.sqrt(g * h0)))
@@ -106,7 +104,7 @@ class LxF(BaseSimulator):
         else:
             self.dt = dt
 
-        self.cfl_data.fill(self.dt, stream=self.stream)
+        self.handler.array_fill(self.dt, self.stream)
 
     def substep(self, dt, step_number):
         """
@@ -114,20 +112,20 @@ class LxF(BaseSimulator):
             dt: Size of each timestep (seconds)
         """
 
-        self.kernel.prepared_async_call(self.grid_size, self.block_size, self.stream,
-                                        self.nx, self.ny,
+        self.handler.prepared_call(self.grid_size, self.block_size, self.stream,
+                                        [self.nx, self.ny,
                                         self.dx, self.dy, dt,
                                         self.g,
                                         self.boundary_conditions,
-                                        self.u0[0].data.gpudata, self.u0[0].data.strides[0],
-                                        self.u0[1].data.gpudata, self.u0[1].data.strides[0],
-                                        self.u0[2].data.gpudata, self.u0[2].data.strides[0],
-                                        self.u1[0].data.gpudata, self.u1[0].data.strides[0],
-                                        self.u1[1].data.gpudata, self.u1[1].data.strides[0],
-                                        self.u1[2].data.gpudata, self.u1[2].data.strides[0],
-                                        self.cfl_data.gpudata,
+                                        self.u0[0].data, self.u0[0].get_strides()[0],
+                                        self.u0[1].data, self.u0[1].get_strides()[0],
+                                        self.u0[2].data, self.u0[2].get_strides()[0],
+                                        self.u1[0].data, self.u1[0].get_strides()[0],
+                                        self.u1[1].data, self.u1[1].get_strides()[0],
+                                        self.u1[2].data, self.u1[2].get_strides()[0],
+                                        self.handler.cfl_data,
                                         0, 0,
-                                        self.nx, self.ny)
+                                        self.nx, self.ny])
         self.u0, self.u1 = self.u1, self.u0
 
     def get_output(self):
@@ -138,5 +136,5 @@ class LxF(BaseSimulator):
         self.u1.check()
 
     def compute_dt(self):
-        max_dt = gpuarray.min(self.cfl_data, stream=self.stream).get()
+        max_dt = self.handler.array_min(self.stream)
         return max_dt * 0.5

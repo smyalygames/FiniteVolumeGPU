@@ -24,7 +24,6 @@ import gc
 
 from IPython.core import magic_arguments
 from IPython.core.magic import line_magic, Magics, magics_class
-import pycuda.driver as cuda
 
 from GPUSimulators.common import IPEngine
 from GPUSimulators.gpu import KernelContext
@@ -43,14 +42,15 @@ class MagicCudaContext(Magics):
     @magic_arguments.argument(
         '--no_autotuning', '-na', action="store_true", help='Disable autotuning of kernels')
     def cuda_context_handler(self, line):
+        # import pycuda.driver as cuda
         args = magic_arguments.parse_argstring(self.cuda_context_handler, line)
         self.logger = logging.getLogger(__name__)
 
         self.logger.info(f"Registering {args.name} in user workspace")
 
         context_flags = None
-        if args.blocking:
-            context_flags = cuda.ctx_flags.SCHED_BLOCKING_SYNC
+        # if args.blocking:
+        #     context_flags = cuda.ctx_flags.SCHED_BLOCKING_SYNC
 
         if args.name in self.shell.user_ns.keys():
             self.logger.debug("Context already registered! Ignoring")
@@ -65,19 +65,19 @@ class MagicCudaContext(Magics):
         # this function will be called on exceptions in any cell
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             self.logger.exception(f"Exception caught: Resetting to CUDA context {args.name}")
-            while cuda.Context.get_current() is not None:
-                context = cuda.Context.get_current()
-                self.logger.info(f"Popping <{str(context.handle)}>")
-                cuda.Context.pop()
+            # while cuda.Context.get_current() is not None:
+            #     context = cuda.Context.get_current()
+            #     self.logger.info(f"Popping <{str(context.handle)}>")
+            #     cuda.Context.pop()
 
-            if args.name in self.shell.user_ns.keys():
-                self.logger.info(f"Pushing <{str(self.shell.user_ns[args.name].cuda_context.handle)}>")
-                self.shell.user_ns[args.name].cuda_context.push()
-            else:
-                self.logger.error(f"No CUDA context called {args.name} found (something is wrong)")
-                self.logger.error("CUDA will not work now")
-
-            self.logger.debug("==================================================================")
+            # if args.name in self.shell.user_ns.keys():
+            #     self.logger.info(f"Pushing <{str(self.shell.user_ns[args.name].context.handle)}>")
+            #     self.shell.user_ns[args.name].context.push()
+            # else:
+            #     self.logger.error(f"No CUDA context called {args.name} found (something is wrong)")
+            #     self.logger.error("CUDA will not work now")
+            #
+            # self.logger.debug("==================================================================")
 
             # still show the error within the notebook, don't just swallow it
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
@@ -89,10 +89,10 @@ class MagicCudaContext(Magics):
         import atexit
         def exitfunc():
             self.logger.info("Exitfunc: Resetting CUDA context stack")
-            while cuda.Context.get_current() is not None:
-                context = cuda.Context.get_current()
-                self.logger.info(f"`-> Popping <{str(context.handle)}>")
-                cuda.Context.pop()
+            # while cuda.Context.get_current() is not None:
+            #     context = cuda.Context.get_current()
+            #     self.logger.info(f"`-> Popping <{str(context.handle)}>")
+            #     cuda.Context.pop()
             self.logger.debug("==================================================================")
 
         atexit.register(exitfunc)
