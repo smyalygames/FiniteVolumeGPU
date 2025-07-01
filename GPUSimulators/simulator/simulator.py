@@ -112,6 +112,7 @@ class BaseSimulator(object):
                     self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
                     break
 
+                prev_time = self.sim_time()
                 # Step forward in time
                 self.step(current_dt)
 
