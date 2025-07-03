@@ -14,7 +14,7 @@ class HIPContext(Context):
     Class that manages the HIP context.
     """
 
-    def __init__(self, device=0, context_flags=None, use_cache=True, autotuning=False):
+    def __init__(self, device=None, context_flags=None, use_cache=True, autotuning=False):
         """
         Creates a new HIP context.
         """
@@ -24,6 +24,11 @@ class HIPContext(Context):
         # Log information about HIP version
         self.logger.info(f"HIP Python version {hip_main.HIP_VERSION_NAME}")
         self.logger.info(f"ROCm version {hip_main.ROCM_VERSION_NAME}")
+
+        if device is None:
+            device = 0
+
+        hip_check(hip.hipSetDevice(device))
 
         # Device information
         props = hip.hipDeviceProp_t()
@@ -48,6 +53,10 @@ class HIPContext(Context):
 
         for prog in self.prog.values():
             hip_check(hiprtc.hiprtcDestroyProgram(prog.createRef()))
+
+    def __str__(self):
+        device_handle = hip_check(hip.hipGetDevice())
+        return f"HIPContext id {device_handle}"
 
     def get_module(self, kernel_filename: str,
                    function: str,
