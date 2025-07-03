@@ -55,8 +55,11 @@ class HIPContext(Context):
             hip_check(hiprtc.hiprtcDestroyProgram(prog.createRef()))
 
     def __str__(self):
-        device_handle = hip_check(hip.hipGetDevice())
-        return f"HIPContext id {device_handle}"
+        return f"HIPContext id {self.get_device_id()}"
+
+    @staticmethod
+    def get_device_id():
+        return hip_check(hip.hipGetDevice())
 
     def get_module(self, kernel_filename: str,
                    function: str,
@@ -92,13 +95,6 @@ class HIPContext(Context):
 
         compile_args = [bytes(arg, "utf-8") for arg in compile_args]
         compile_args.append(b"--offload-arch=" + self.arch)
-
-        def compile_message_handler(compile_success_bool, info_str, error_str):
-            self.logger.debug(f"Compilation success: {str(compile_success_bool)}")
-            if info_str:
-                self.logger.debug(f"Compilation info: {info_str}")
-            if error_str:
-                self.logger.debug(f"Compilation error: {error_str}")
 
         kernel_filename = os.path.normpath(kernel_filename + ".hip")
         kernel_path = os.path.abspath(os.path.join(self.module_path, kernel_filename))
