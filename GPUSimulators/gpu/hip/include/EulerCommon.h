@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#include <hip/amd_detail/amd_hip_vector_types.h>
 #include <hip/hip_runtime.h>
 #include "common.h"
 #include "limiters.h"
