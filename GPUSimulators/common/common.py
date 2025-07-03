@@ -77,7 +77,7 @@ def to_json(in_dict, compressed=True):
                 json.dumps(out_dict[key])
             except:
                 value = str(out_dict[key])
-                logger.warning("JSON: Converting {:s} to string ({:s})".format(key, value))
+                logger.warning(f"JSON: Converting {key} to string ({value})")
                 out_dict[key] = value
     return json.dumps(out_dict)
 
@@ -101,7 +101,7 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
 
     logger = logging.getLogger(__name__)
 
-    if len(save_times <= 0):
+    if len(save_times) <= 0:
         raise ValueError("Need to specify which times to save")
 
     with Timer("construct") as t:
