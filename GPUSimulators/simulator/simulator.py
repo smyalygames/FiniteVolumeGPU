@@ -2,7 +2,6 @@ import logging
 import math
 
 import numpy as np
-from tqdm.auto import tqdm
 
 from . import boundary
 from GPUSimulators.gpu import KernelContext
@@ -84,7 +83,7 @@ class BaseSimulator(object):
     def __str__(self):
         return f"{self.__class__.__name__} [{self.nx}x{self.ny}]"
 
-    def simulate(self, t, dt=None, tolerance=None):
+    def simulate(self, t, dt=None, tolerance=None, pbar=None):
         """
         Function which simulates t_end seconds using the step function
         Requires that the step() function is implemented in the subclasses
@@ -93,6 +92,7 @@ class BaseSimulator(object):
             t: How long the simulation should run for.
             dt: Time steps.
             tolerance: How small should the time steps be before considering it an infinite loop.
+            pbar: A tqdm progress bar to update time.
         """
 
         t_start = self.sim_time()
@@ -106,27 +106,27 @@ class BaseSimulator(object):
         if tolerance is None:
             tolerance = 0.000000001
 
-        with tqdm(total=t, desc="Running Simulator", leave=False) as pbar:
-            while self.sim_time() < t_end:
-                # Prevent an infinite loop from occurring from tiny numbers
-                if abs(t_end - self.sim_time()) < tolerance:
-                    break
+        while self.sim_time() < t_end:
+            # Prevent an infinite loop from occurring from tiny numbers
+            if abs(t_end - self.sim_time()) < tolerance:
+                break
 
-                if update_dt and (self.sim_steps() % 100 == 0):
-                    self.dt = self.compute_dt() * self.cfl_scale
+            if update_dt and (self.sim_steps() % 100 == 0):
+                self.dt = self.compute_dt() * self.cfl_scale
 
-                # Compute timestep for "this" iteration (i.e., shorten last timestep)
-                current_dt = np.float32(min(self.dt, t_end - self.sim_time()))
+            # Compute timestep for "this" iteration (i.e., shorten last timestep)
+            current_dt = np.float32(min(self.dt, t_end - self.sim_time()))
 
-                # Stop if end reached (should not happen)
-                if current_dt <= 0.0:
-                    self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
-                    break
+            # Stop if end reached (should not happen)
+            if current_dt <= 0.0:
+                self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
+                break
 
-                # Step forward in time
-                self.step(current_dt)
+            # Step forward in time
+            self.step(current_dt)
 
-                # Update the progress bar
+            # Update the progress bar
+            if pbar is not None:
                 pbar.update(float(current_dt))
 
     def step(self, dt: int):

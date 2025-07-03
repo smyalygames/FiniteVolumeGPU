@@ -21,15 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-
-import numpy as np
 import time
 import subprocess
 import logging
 import json
 
+import numpy as np
+from tqdm.auto import tqdm
+
 from GPUSimulators.common.data_dumper import DataDumper
-from GPUSimulators.common.progress_printer import ProgressPrinter
 from GPUSimulators.common.timer import Timer
 
 
@@ -160,43 +160,36 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
 
         profiling_data_sim_runner["end"]["t_sim_init"] = time.time()
 
-        # Start simulation loop
-        progress_printer = ProgressPrinter(save_times[-1], print_every=10)
-        for k in range(len(save_times)):
-            # Get target time and step size there
-            t_step = t_steps[k]
-            t_end = save_times[k]
-            
-            # Sanity check simulator
-            try:
-                sim.check()
-            except AssertionError as e:
-                logger.error(f"Error after {sim.sim_steps()} steps (t={sim.sim_time()}: {str(e)}")
-                return outdata.filename
+        with tqdm(total=save_times[-1], desc="Simulation progress", unit="sim s") as pbar:
+            # Start simulation loop
+            for k, t_step in enumerate(t_steps):
+                t_end = k
 
-            profiling_data_sim_runner["start"]["t_full_step"] += time.time()
+                # Sanity check simulator
+                try:
+                    sim.check()
+                except AssertionError as e:
+                    logger.error(f"Error after {sim.sim_steps()} steps (t={sim.sim_time()}: {str(e)}")
+                    return outdata.filename
 
-            # Simulate
-            if t_step > 0.0:
-                sim.simulate(t_step, dt)
+                profiling_data_sim_runner["start"]["t_full_step"] += time.time()
 
-            profiling_data_sim_runner["end"]["t_full_step"] += time.time()
+                # Simulate
+                if t_step > 0.0:
+                    sim.simulate(t_step, dt, pbar=pbar)
 
-            profiling_data_sim_runner["start"]["t_nc_write"] += time.time()
+                profiling_data_sim_runner["end"]["t_full_step"] += time.time()
 
-            #Download
-            save_vars = sim.download(download_vars)
-            
-            #Save to file
-            for i, var_name in enumerate(save_var_names):
-                ncvars[var_name][k, :] = save_vars[i]
+                profiling_data_sim_runner["start"]["t_nc_write"] += time.time()
 
-            profiling_data_sim_runner["end"]["t_nc_write"] += time.time()
+                #Download
+                save_vars = sim.download(download_vars)
 
-            #Write progress to screen
-            print_string = progress_printer.get_print_string(t_end)
-            if print_string:
-                logger.debug(print_string)
+                #Save to file
+                for i, var_name in enumerate(save_var_names):
+                    ncvars[var_name][k, :] = save_vars[i]
+
+                profiling_data_sim_runner["end"]["t_nc_write"] += time.time()
                 
         logger.debug(f"Simulated to t={t_end} in "
                      + f"{sim.sim_steps()} timesteps (average dt={sim.sim_time() / sim.sim_steps()})")
