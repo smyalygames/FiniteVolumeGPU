@@ -3,7 +3,6 @@
 name: FiniteVolumeGPU_HPC
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
     - python=3.13.5
