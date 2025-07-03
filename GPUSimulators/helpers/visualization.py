@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import numpy as np
-from matplotlib.colors import Normalize
 
 
 def gen_schlieren(rho):
@@ -46,6 +45,7 @@ def gen_vorticity(rho, rho_u, rho_v):
 
 
 def gen_colors(rho, rho_u, rho_v, cmap, vmax, vmin):
+    from matplotlib.colors import Normalize
     schlieren = gen_schlieren(rho)
     curl = gen_vorticity(rho, rho_u, rho_v)
 
