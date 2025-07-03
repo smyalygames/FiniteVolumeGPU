@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import argparse
 import numpy as np
 import gc
 import time
@@ -28,18 +29,15 @@ import os
 
 # MPI
 from mpi4py import MPI
-
 # CUDA
 import pycuda.driver as cuda
 
 # Simulator engine etc
-from GPUSimulators import MPISimulator
+from GPUSimulators.mpi import MPISimulator, MPIGrid
 from GPUSimulators.common import run_simulation, get_git_hash, get_git_status
-from GPUSimulators.gpu import CudaContext
+from GPUSimulators.gpu import KernelContext
 from GPUSimulators.model import EE2DKP07Dimsplit
 from GPUSimulators.helpers import initial_conditions as IC
-
-import argparse
 
 parser = argparse.ArgumentParser(description='Strong and weak scaling experiments.')
 parser.add_argument('-nx', type=int, default=128)
@@ -83,7 +81,7 @@ logger.info(f"File logger using level {logging.getLevelName(log_level_file)} to 
 # Initialize MPI grid etc
 ####
 logger.info("Creating MPI grid")
-grid = MPISimulator.MPIGrid(MPI.COMM_WORLD)
+grid = MPIGrid(MPI.COMM_WORLD)
 
 ####
 # Initialize CUDA
@@ -94,7 +92,7 @@ local_rank = grid.get_local_rank()
 num_cuda_devices = cuda.Device.count()
 cuda_device = local_rank % num_cuda_devices
 logger.info(f"Process {str(local_rank)} using CUDA device {str(cuda_device)}")
-cuda_context = CudaContext(device=cuda_device, autotuning=False)
+cuda_context = KernelContext(device=cuda_device, autotuning=False)
 
 ####
 # Set initial conditions
@@ -138,7 +136,7 @@ logger.info("Running simulation")
 
 def genSim(grid, **kwargs):
     local_sim = EE2DKP07Dimsplit(**kwargs)
-    sim = MPISimulator.MPISimulator(local_sim, grid)
+    sim = MPISimulator(local_sim, grid)
     return sim
 
 
