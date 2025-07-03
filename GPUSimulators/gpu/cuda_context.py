@@ -28,7 +28,7 @@ import pycuda.compiler as cuda_compiler
 import pycuda.gpuarray
 import pycuda.driver as cuda
 
-from GPUSimulators import Autotuner
+from GPUSimulators.Autotuner import Autotuner
 from GPUSimulators.common import Timer
 from GPUSimulators.gpu.context import Context
 
@@ -79,7 +79,7 @@ class CudaContext(Context):
         if autotuning:
             self.logger.info(
                 "Autotuning enabled. It may take several minutes to run the code the first time: have patience")
-            self.autotuner = Autotuner.Autotuner()
+            self.autotuner = Autotuner()
 
     def __del__(self, *args):
         self.logger.info(f"Cleaning up CUDA context handle <{str(self.cuda_context.handle)}>")

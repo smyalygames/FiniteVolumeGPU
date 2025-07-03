@@ -26,12 +26,11 @@ import os
 from socket import gethostname
 
 import numpy as np
-import pycuda.driver as cuda
 from tqdm.auto import tqdm
 
 from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 from GPUSimulators.common import Timer
-from GPUSimulators.gpu import KernelContext
+from GPUSimulators.gpu import KernelContext, Event
 
 
 def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
@@ -51,8 +50,8 @@ def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
         return np.nan
 
     # Create timer events
-    start = cuda.Event()
-    end = cuda.Event()
+    start = Event()
+    end = Event()
 
     # Warmup
     for i in range(warmup_timesteps):
@@ -74,9 +73,9 @@ def run_benchmark(simulator, arguments, timesteps=10, warmup_timesteps=2):
     # Sanity check solution
     h, hu, hv = sim.download()
     sane = True
-    sane = sane and sanity_check(0.3, 0.7)
-    sane = sane and sanity_check(-0.2, 0.2)
-    sane = sane and sanity_check(-0.2, 0.2)
+    sane = sane and sanity_check(h, 0.3, 0.7)
+    sane = sane and sanity_check(hu, -0.2, 0.2)
+    sane = sane and sanity_check(hv, -0.2, 0.2)
 
     if sane:
         logger.debug(f"{simulator.__name__} [{arguments["block_width"]} x {arguments["block_height"]}] succeeded: "
@@ -170,7 +169,7 @@ def benchmark_single_simulator(simulator, arguments, block_widths, block_heights
             sim_arguments.update({'block_height': block_height})
             for i, block_width in enumerate(tqdm(block_widths, desc=f'Iteration {j} Progress', leave=False)):
                 sim_arguments.update({'block_width': block_width})
-                megacells[j, i] = run_benchmark(sim_arguments)
+                megacells[j, i] = run_benchmark(simulator, sim_arguments)
 
     logger.debug("Completed %s in %f seconds", simulator.__name__, t.secs)
 
@@ -207,14 +206,14 @@ class Autotuner:
         # Set arguments to send to the simulators during construction
         context = KernelContext(autotuning=False)
         g = 9.81
-        h0, hu0, hv0, dx, dy, dt = gen_test_data(ny=self.ny, g=g)
+        h0, hu0, hv0, dx, dy, dt = gen_test_data(nx=self.nx, ny=self.ny, g=g)
         arguments = {
             'context': context,
             'h0': h0, 'hu0': hu0, 'hv0': hv0,
             'nx': self.nx, 'ny': self.ny,
             'dx': dx, 'dy': dy, 'dt': 0.9 * dt,
             'g': g,
-            'compile_opts': ['-Wno-deprecated-gpu-targets']
+            'compile_opts': []
         }
 
         # Load existing data into memory
@@ -227,7 +226,7 @@ class Autotuner:
                     benchmark_data[k] = v
 
         # Run benchmark
-        benchmark_data[key + "_megacells"] = benchmark_single_simulator(arguments, self.block_widths,
+        benchmark_data[key + "_megacells"] = benchmark_single_simulator(simulator, arguments, self.block_widths,
                                                                         self.block_heights)
         benchmark_data[key + "_block_widths"] = self.block_widths
         benchmark_data[key + "_block_heights"] = self.block_heights
@@ -268,9 +267,9 @@ class Autotuner:
                     self.benchmark(simulator)
                     data = np.load(self.filename)
 
-                def find_max_index(megacells):
-                    max_index = np.nanargmax(megacells)
-                    return np.unravel_index(max_index, megacells.shape)
+                def find_max_index(megacells_arg):
+                    max_index = np.nanargmax(megacells_arg)
+                    return np.unravel_index(max_index, megacells_arg.shape)
 
                 megacells = data[key + '_megacells']
                 block_widths = data[key + '_block_widths']
@@ -282,7 +281,3 @@ class Autotuner:
                                          "megacells": megacells[j, i]}
                 logger.debug(f"Returning {self.performance[key]} as peak performance parameters")
                 return self.performance[key]
-
-            # This should never happen
-            raise "Something wrong: Could not get autotuning data!"
-            return None

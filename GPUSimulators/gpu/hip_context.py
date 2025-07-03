@@ -37,11 +37,10 @@ class HIPContext(Context):
         self.logger.debug(f" => total available memory: {int(props.totalGlobalMem / pow(1024, 2))} MiB")
 
         if autotuning:
+            from GPUSimulators.Autotuner import Autotuner
             self.logger.info(
                 "Autotuning enabled. It may take several minutes to run the code the first time: have patience")
-            raise NotImplementedError("Autotuner is not yet implemented for HIP.")
-            # TODO Implement Autotuner for HIP
-            # self.autotuner = Autotuner.Autotuner()
+            self.autotuner = Autotuner()
 
     def __del__(self):
         for module in self.modules.values():
