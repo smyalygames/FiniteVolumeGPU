@@ -106,7 +106,7 @@ class BaseSimulator(object):
         if tolerance is None:
             tolerance = 0.000000001
 
-        with tqdm(total=t_end, desc="Running Simulator") as pbar:
+        with tqdm(total=t, desc="Running Simulator", leave=False) as pbar:
             while self.sim_time() < t_end:
                 # Prevent an infinite loop from occurring from tiny numbers
                 if abs(t_end - self.sim_time()) < tolerance:
@@ -123,11 +123,8 @@ class BaseSimulator(object):
                     self.logger.warning(f"Timestep size {self.sim_steps()} is less than or equal to zero!")
                     break
 
-                prev_time = self.sim_time()
                 # Step forward in time
                 self.step(current_dt)
-
-
 
                 # Update the progress bar
                 pbar.update(float(current_dt))
