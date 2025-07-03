@@ -24,12 +24,10 @@ import numpy as np
 from mpi4py import MPI
 import time
 
-import pycuda.driver as cuda
-
 from GPUSimulators.simulator import BaseSimulator, BoundaryCondition
 
 
-class MPISimulator(BaseSimulator):
+class BaseMPISimulator(BaseSimulator):
     """
     Class which handles communication between simulators on different MPI nodes
     """
@@ -116,6 +114,16 @@ class MPISimulator(BaseSimulator):
         self.write_n = self.read_n + np.array([0, gc_y, 0, 0])
         self.write_s = self.read_s - np.array([0, gc_y, 0, 0])
 
+        self.in_e = None
+        self.in_w = None
+        self.in_n = None
+        self.in_s = None
+
+        # Allocate data for sending
+        self.out_e = None
+        self.out_w = None
+        self.out_n = None
+        self.out_s = None
         self.__create_pagelocked_memory()
 
         self.logger.debug(f"Simulator rank {self.grid.comm.rank} initialized on {MPI.Get_processor_name()}")
@@ -301,23 +309,4 @@ class MPISimulator(BaseSimulator):
         whilst north/south only transfer internal cells
         Reuses the width/height defined in the read-extets above
         """
-
-        self.in_e = cuda.pagelocked_empty((int(self.nvars), int(self.read_e[3]), int(self.read_e[2])),
-                                          dtype=np.float32)  # np.empty((self.nvars, self.read_e[3], self.read_e[2]), dtype=np.float32)
-        self.in_w = cuda.pagelocked_empty((int(self.nvars), int(self.read_w[3]), int(self.read_w[2])),
-                                          dtype=np.float32)  # np.empty((self.nvars, self.read_w[3], self.read_w[2]), dtype=np.float32)
-        self.in_n = cuda.pagelocked_empty((int(self.nvars), int(self.read_n[3]), int(self.read_n[2])),
-                                          dtype=np.float32)  # np.empty((self.nvars, self.read_n[3], self.read_n[2]), dtype=np.float32)
-        self.in_s = cuda.pagelocked_empty((int(self.nvars), int(self.read_s[3]), int(self.read_s[2])),
-                                          dtype=np.float32)  # np.empty((self.nvars, self.read_s[3], self.read_s[2]), dtype=np.float32)
-
-        # Allocate data for sending
-        self.out_e = cuda.pagelocked_empty((int(self.nvars), int(self.read_e[3]), int(self.read_e[2])),
-                                           dtype=np.float32)  # np.empty_like(self.in_e)
-        self.out_w = cuda.pagelocked_empty((int(self.nvars), int(self.read_w[3]), int(self.read_w[2])),
-                                           dtype=np.float32)  # np.empty_like(self.in_w)
-        self.out_n = cuda.pagelocked_empty((int(self.nvars), int(self.read_n[3]), int(self.read_n[2])),
-                                           dtype=np.float32)  # np.empty_like(self.in_n)
-        self.out_s = cuda.pagelocked_empty((int(self.nvars), int(self.read_s[3]), int(self.read_s[2])),
-                                           dtype=np.float32)  # np.empty_like(self.in_s)
-
+        raise NotImplementedError("This function needs to be implemented in a subclass.")
