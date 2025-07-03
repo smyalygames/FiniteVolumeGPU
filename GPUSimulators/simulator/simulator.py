@@ -143,6 +143,9 @@ class BaseSimulator(object):
     def synchronize(self):
         raise NotImplementedError("Needs to be implemented in HIP/CUDA subclass")
 
+    def internal_synchronize(self):
+        raise NotImplementedError("Needs to be implemented in HIP/CUDA subclass")
+
     def sim_time(self):
         return self.t
 

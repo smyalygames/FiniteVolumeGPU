@@ -5,7 +5,7 @@ from .simulator import BaseMPISimulator
 
 class HIPMPISimulator(BaseMPISimulator):
     def __init__(self, sim, grid):
-        super().__init__(sim, grid)
+        super().__init__(sim, grid, self.__create_pagelocked_memory)
 
     def __create_pagelocked_memory(self):
         self.in_e = np.empty((int(self.nvars), int(self.read_e[3]), int(self.read_e[2])),

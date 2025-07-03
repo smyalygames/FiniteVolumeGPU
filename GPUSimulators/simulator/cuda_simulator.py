@@ -22,3 +22,6 @@ class CudaSimulator(simulator.BaseSimulator):
 
     def synchronize(self):
         self.stream.synchronize()
+
+    def internal_synchronize(self):
+        self.internal_stream.synchronize()

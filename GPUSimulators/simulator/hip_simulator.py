@@ -28,3 +28,6 @@ class HIPSimulator(simulator.BaseSimulator):
 
     def synchronize(self):
         hip_check(hip.hipStreamSynchronize(self.stream))
+
+    def internal_synchronize(self):
+        hip_check(hip.hipStreamSynchronize(self.internal_stream))
