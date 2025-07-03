@@ -84,10 +84,15 @@ class BaseSimulator(object):
     def __str__(self):
         return f"{self.__class__.__name__} [{self.nx}x{self.ny}]"
 
-    def simulate(self, t, dt=None):
+    def simulate(self, t, dt=None, tolerance=None):
         """
         Function which simulates t_end seconds using the step function
         Requires that the step() function is implemented in the subclasses
+
+        Args:
+            t: How long the simulation should run for.
+            dt: Time steps.
+            tolerance: How small should the time steps be before considering it an infinite loop.
         """
 
         t_start = self.sim_time()
@@ -98,9 +103,15 @@ class BaseSimulator(object):
             update_dt = False
             self.dt = dt
 
-        prev_time = 0
+        if tolerance is None:
+            tolerance = 0.000000001
+
         with tqdm(total=t_end, desc="Running Simulator") as pbar:
             while self.sim_time() < t_end:
+                # Prevent an infinite loop from occurring from tiny numbers
+                if abs(t_end - self.sim_time()) < tolerance:
+                    break
+
                 if update_dt and (self.sim_steps() % 100 == 0):
                     self.dt = self.compute_dt() * self.cfl_scale
 
@@ -116,9 +127,7 @@ class BaseSimulator(object):
                 # Step forward in time
                 self.step(current_dt)
 
-                # Prevent an infinite loop from occurring from tiny numbers
-                if self.sim_time() - prev_time == 0:
-                    self.dt = np.float32(t_end - self.sim_time())
+
 
                 # Update the progress bar
                 pbar.update(float(current_dt))
