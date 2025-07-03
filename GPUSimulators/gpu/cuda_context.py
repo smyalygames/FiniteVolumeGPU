@@ -28,7 +28,7 @@ import pycuda.compiler as cuda_compiler
 import pycuda.gpuarray
 import pycuda.driver as cuda
 
-from GPUSimulators.Autotuner import Autotuner
+from GPUSimulators.autotuner import Autotuner
 from GPUSimulators.common import Timer
 from GPUSimulators.gpu.context import Context
 

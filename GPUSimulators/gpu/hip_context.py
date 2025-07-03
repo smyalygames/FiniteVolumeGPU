@@ -37,7 +37,7 @@ class HIPContext(Context):
         self.logger.debug(f" => total available memory: {int(props.totalGlobalMem / pow(1024, 2))} MiB")
 
         if autotuning:
-            from GPUSimulators.Autotuner import Autotuner
+            from GPUSimulators.autotuner import Autotuner
             self.logger.info(
                 "Autotuning enabled. It may take several minutes to run the code the first time: have patience")
             self.autotuner = Autotuner()
