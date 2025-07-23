@@ -1,0 +1,62 @@
+BootStrap: docker
+From: rocm/dev-ubuntu-22.04:6.1.2
+
+%files
+    conda_environment_lumi.yml /opt
+
+%environment
+    export MAMBA_ROOT_PREFIX="/opt/conda"
+    export MAMBA_EXE="/usr/bin/micromamba"
+    export PATH="${MAMBA_ROOT_PREFIX}/bin:$PATH"
+
+%post
+    # Version values
+    # MPI on LUMI is 3.4a2
+    export MPICH_VERSION=3.4.3
+    export MPICH_URL="http://www.mpich.org/static/downloads/$MPICH_VERSION/mpich-$MPICH_VERSION.tar.gz"
+
+    # Base OS
+    echo -e "\e[32m + \e[39mInstalling \e[1mrequired packages\e[0m..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y file g++ gcc gfortran make gdb strace wget curl ca-certificates build-essential
+    rm -rf /var/lib/apt /var/lib/dpkg /var/lib/cache /var/lib/log
+
+    # Install MPICH
+    echo -e "\e[32m + \e[39mInstalling \e[1mMPICH ${MPICH_VERSION}\e[0m..."
+    mkdir -p /tmp/mpich
+    mkdir -p /opt
+
+    cd /tmp/mpich
+    wget -q $MPICH_URL -O mpich-$MPICH_VERSION.tar.gz
+    tar xzf mpich-$MPICH_VERSION.tar.gz
+    cd mpich-$MPICH_VERSION
+
+    export FFLAGS=-fallow-argument-mismatch
+    ./configure --enable-fast=all,O3 --prefix=/usr --with-device=ch3
+    make -j$(nproc)
+    make install
+    ldconfig
+
+    # Install Miniconda
+    echo -e "\e[32m + \e[39mInstalling \e[1mMiniconda\e[0m..."
+    mkdir -p /tmp/micromamba
+    cd /tmp/micromamba
+    curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj -C /usr bin/micromamba
+    mkdir -p /opt/conda/base
+
+    export MAMBA_ROOT_PREFIX="/opt/conda"
+    export MAMBA_EXE="/usr/bin/micromamba"
+
+    mkdir -p "$MAMBA_ROOT_PREFIX/conda-meta"
+    chmod -R a+rwx "$MAMBA_ROOT_PREFIX"
+
+    # Create Conda environment
+    echo -e "\e[32m + \e[39mCreating \e[1mConda environment\e[0m..."
+    eval ${MAMBA_EXE} shell hook --shell=bash
+    micromamba install -q -y -n base -f /opt/conda_environment_lumi.yml && \
+    micromamba clean --all --yes
+
+%help
+    This is a container built for running FiniteVolumeGPU on LUMI-G.
+    It includes MPICH and the required Conda packages.

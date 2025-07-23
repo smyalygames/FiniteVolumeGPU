@@ -1,35 +1,29 @@
 # Assumes that conda, pip, build-essentials and cuda are installed
 ---
-name: FiniteVolumeGPU
+name: FiniteVolumeGPU_LUMI
 channels:
   - conda-forge
 
 dependencies:
-    - python=3.13.5
-    - pip
-    - numpy
-    - mpi4py
-    - mpich
-    - pytools
-    - scipy
-    - netcdf4=*=mpi_mpich_*
-    - matplotlib
-    - ipyparallel
-    - jupyter
-    - nb_conda_kernels
-    - line_profiler
-    - tqdm
-    - pip:
-        - hip-python==6.4.1.552.39
-        - --extra-index-url https://test.pypi.org/simple/
-
-
+  - python=3.10
+  - pip
+  - mpi=*=mpich
+  - mpich=3.4.3=external_*
+  - netcdf4=*=mpi_mpich_*
+  - pytools
+  - numpy
+  - scipy
+  - tqdm
+  - pip:
+      - mpi4py==3.1.1
+      - hip-python==6.1.2.495.17
+      - --extra-index-url https://test.pypi.org/simple/
 # Install conda environment (one-time operation):
 # $ conda env create -f conda_environment.yml
 # Activate environment
 # $ conda activate FiniteVolumeGPU_HPC
 
-# OPTIONAL: If you want to compile pycuda yourself, uncomment pycuda under 
+# OPTIONAL: If you want to compile pycuda yourself, uncomment pycuda under
 # "dependencies" above and do the following (one-time operation):
 #  - pycuda: $ pip3 install --no-deps -U pycuda
 # on Windows: make sure your visual studio c++ compiler is available in PATH

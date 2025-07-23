@@ -5,11 +5,15 @@
 
 /data
 
+# Apptainer/Singularity Containers
+*.sif
+
 # Numpy Zipped
 *.npz
 
 # NetCDF
 *.nc
+*.nc4
 
 # Python Related files
 # Taken from: https://github.com/github/gitignore/blob/main/Python.gitignore
