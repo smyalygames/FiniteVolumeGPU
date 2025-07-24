@@ -1,4 +1,5 @@
 import logging
+from enum import IntEnum
 
 import numpy as np
 from mpi4py import MPI
@@ -28,7 +29,7 @@ def get_grid(num_nodes, num_dims):
 
         # Spent all factors: return number itself
         if left == 1:
-            return (n, [n])
+            return n, [n]
 
         # Find a new factor
         i = 2
@@ -79,7 +80,7 @@ class MPIGrid(object):
     neighboring nodes
     """
 
-    def __init__(self, comm, ndims=2):
+    def __init__(self, comm, nx, ny, ndims=2):
         self.logger = logging.getLogger(__name__)
 
         if ndims != 2:
@@ -87,40 +88,53 @@ class MPIGrid(object):
         if comm.size < 1:
             raise ValueError("Must have at least one node")
 
-        self.grid = get_grid(comm.size, ndims)
+        grid = get_grid(comm.size, ndims)
+        self.x = grid[0]
+        self.y = grid[1]
+        self.x0 = nx * (self.x-1)
+        self.x1 = self.x0 + nx
+        self.y0 = ny * (self.y-1)
+        self.y1 = self.y0 + ny
+
         self.comm = comm
 
         self.logger.debug(
-            f"Created MPI grid: {self.grid}. Rank {self.comm.rank} has coordinate {self.get_coordinate()}")
+            f"Created MPI grid: {grid}. Rank {self.comm.rank} has coordinate {self.get_coordinate()}")
 
     def get_coordinate(self, rank=None):
         if rank is None:
             rank = self.comm.rank
-        i = (rank % self.grid[0])
-        j = (rank // self.grid[0])
+        i = (rank % self.x)
+        j = (rank // self.x)
         return i, j
 
+    def get_grid_coordinate(self, rank=None):
+        """
+        Gets the coordinate of the top left position of the grid in relation
+        to the entire grid.
+        """
+
     def get_rank(self, i, j):
-        return j * self.grid[0] + i
+        return j * self.x + i
 
     def get_east(self):
         i, j = self.get_coordinate(self.comm.rank)
-        i = (i + 1) % self.grid[0]
+        i = (i + 1) % self.x
         return self.get_rank(i, j)
 
     def get_west(self):
         i, j = self.get_coordinate(self.comm.rank)
-        i = (i + self.grid[0] - 1) % self.grid[0]
+        i = (i + self.x - 1) % self.x
         return self.get_rank(i, j)
 
     def get_north(self):
         i, j = self.get_coordinate(self.comm.rank)
-        j = (j + 1) % self.grid[1]
+        j = (j + 1) % self.y
         return self.get_rank(i, j)
 
     def get_south(self):
         i, j = self.get_coordinate(self.comm.rank)
-        j = (j + self.grid[1] - 1) % self.grid[1]
+        j = (j + self.y - 1) % self.y
         return self.get_rank(i, j)
 
     def gather(self, data, root=0):

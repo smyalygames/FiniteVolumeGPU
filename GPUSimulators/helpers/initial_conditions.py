@@ -28,8 +28,8 @@ from GPUSimulators.simulator.boundary import BoundaryCondition
 
 def get_extent(width, height, nx, ny, grid, index=None):
     if grid is not None:
-        gx = grid.grid[0]
-        gy = grid.grid[1]
+        gx = grid.x
+        gy = grid.y
         if index is not None:
             i, j = grid.get_coordinate(index)
         else:

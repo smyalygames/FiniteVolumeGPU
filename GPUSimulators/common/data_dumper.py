@@ -2,8 +2,8 @@ import json
 import logging
 import os
 
-import netCDF4
 import numpy as np
+from netCDF4 import Dataset
 
 
 def to_json(in_dict):
@@ -48,13 +48,6 @@ class DataDumper(object):
             mode = kwargs['mode']
 
         # Create a new unique file if writing
-        if mode:
-            if ("w" in mode) or ("+" in mode) or ("a" in mode):
-                i = 0
-                stem, ext = os.path.splitext(filename)
-                while os.path.isfile(filename):
-                    filename = f"{stem}_{str(i).zfill(4)}{ext}"
-                    i = i + 1
         self.filename = os.path.abspath(filename)
 
         # Save arguments
@@ -70,10 +63,15 @@ class DataDumper(object):
             self.logger.info("Arguments: " + str(self.args))
         if self.kwargs:
             self.logger.info("Keyword arguments: " + str(self.kwargs))
-        self.ncfile = netCDF4.Dataset(self.filename, *self.args, **self.kwargs)
+
+        self.nc = Dataset(
+            self.filename,
+            *self.args,
+            **self.kwargs
+        )
         return self
 
     def __exit__(self, *args):
         self.logger.info("Closing " + self.filename)
-        self.ncfile.close()
+        self.nc.close()
 

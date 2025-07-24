@@ -86,10 +86,10 @@ class BaseMPISimulator(BaseSimulator):
         if gj == 0 and boundary_conditions.south != BoundaryCondition.Type.Periodic:
             self.south = None
             new_boundary_conditions.south = boundary_conditions.south
-        if gi == grid.grid[0] - 1 and boundary_conditions.east != BoundaryCondition.Type.Periodic:
+        if gi == grid.x - 1 and boundary_conditions.east != BoundaryCondition.Type.Periodic:
             self.east = None
             new_boundary_conditions.east = boundary_conditions.east
-        if gj == grid.grid[1] - 1 and boundary_conditions.north != BoundaryCondition.Type.Periodic:
+        if gj == grid.y - 1 and boundary_conditions.north != BoundaryCondition.Type.Periodic:
             self.north = None
             new_boundary_conditions.north = boundary_conditions.north
         sim.set_boundary_conditions(new_boundary_conditions)
@@ -188,12 +188,11 @@ class BaseMPISimulator(BaseSimulator):
 
         width = self.sim.nx * self.sim.dx
         height = self.sim.ny * self.sim.dy
-        i, j = self.grid.get_coordinate()
-        x0 = i * width
-        y0 = j * height
+        x0 = self.grid.x * width
+        y0 = self.grid.y * height
         x1 = x0 + width
         y1 = y0 + height
-        return [x0, x1, y0, y1]
+        return x0, x1, y0, y1
 
     def full_exchange(self):
         ####

@@ -31,15 +31,20 @@ from mpi4py import MPI
 from hip import hip
 
 from GPUSimulators.mpi import MPISimulator, MPIGrid
-from GPUSimulators.common import run_simulation, get_git_hash, get_git_status, hip_check
+from GPUSimulators.common import run_simulation, get_git_hash, get_git_status, hip_check, utils
 from GPUSimulators.gpu import KernelContext
 from GPUSimulators.model import EE2DKP07Dimsplit
 from GPUSimulators.helpers import initial_conditions as IC
+
+# Purely for local debugging
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('localhost', port=24785, stdoutToServer=True, stderrToServer=True)
 
 parser = argparse.ArgumentParser(description='Strong and weak scaling experiments.')
 parser.add_argument('-nx', type=int, default=128)
 parser.add_argument('-ny', type=int, default=128)
 parser.add_argument('--profile', action='store_true')  # default: False
+parser.add_argument('--compile_opts', type=str, help="Compiler options for HIP code.")
 
 args = parser.parse_args()
 
@@ -49,15 +54,19 @@ if args.profile:
     t_total_start = time.time()
     t_init_start = time.time()
 
+nx = args.nx
+ny = args.ny
+
 # Get MPI COMM to use
 comm = MPI.COMM_WORLD
+rank = comm.rank
 
 ####
 # Initialize logging
 ####
 log_level_console = 20
 log_level_file = 10
-log_filename = 'mpi_' + str(comm.rank) + '.log'
+log_filename = 'mpi_' + str(rank) + '.log'
 logger = logging.getLogger('GPUSimulators')
 logger.setLevel(min(log_level_console, log_level_file))
 
@@ -78,7 +87,7 @@ logger.info(f"File logger using level {logging.getLevelName(log_level_file)} to 
 # Initialize MPI grid etc
 ####
 logger.info("Creating MPI grid")
-grid = MPIGrid(MPI.COMM_WORLD)
+grid = MPIGrid(comm, nx, ny)
 
 ####
 # Initialize HIP
@@ -98,8 +107,6 @@ context = KernelContext(device=hip_device, autotuning=False)
 np.random.seed(42)
 
 logger.info("Generating initial conditions")
-nx = args.nx
-ny = args.ny
 
 dt = 0.001
 
@@ -107,14 +114,20 @@ gamma = 1.4
 # save_times = np.linspace(0, 0.000009, 2)
 # save_times = np.linspace(0, 0.000099, 11)
 # save_times = np.linspace(0, 0.000099, 2)
-save_times = np.linspace(0, 20, 21)
-outfile = "mpi_out_" + str(MPI.COMM_WORLD.rank) + ".nc"
+save_times = np.linspace(0, 5, 21)
+outfile = "mpi_out.nc4"
 save_var_names = ['rho', 'rho_u', 'rho_v', 'E']
 
 arguments = IC.gen_kelvin_helmholtz(nx, ny, gamma, grid=grid)
 arguments['context'] = context
 arguments['theta'] = 1.2
 arguments['grid'] = grid
+arguments['compile_opts'] = ['-g', '-g3', '-ggdb', '-gdwarf-4', '-O0']
+
+compile_opts = args.compile_opts
+if compile_opts is not None:
+    arguments['compile_opts'] += compile_opts
+
 
 if args.profile:
     t_init_end = time.time()
@@ -125,7 +138,6 @@ if args.profile:
 # Run simulation
 ####
 logger.info("Running simulation")
-
 
 # Helper function to create MPI simulator
 
@@ -139,14 +151,20 @@ def gen_sim(grid, **kwargs):
 outfile, sim_runner_profiling_data, sim_profiling_data = run_simulation(
     gen_sim, arguments, outfile, save_times, save_var_names, dt)
 
+# Move NetCDF4 file to a unique file, for the next run.
+if rank == 0:
+    new_filename = utils.unique_file(outfile)
+    os.rename(outfile, new_filename)
+
+##### Profiling ######
 if args.profile:
     t_total_end = time.time()
     t_total = t_total_end - t_total_start
     profiling_data["t_total"] = t_total
-    print(f"Total run time on rank {str(MPI.COMM_WORLD.rank)} is {str(t_total)} s")
+    print(f"Total run time on rank {str(rank)} is {str(t_total)} s")
 
 # write profiling to JSON file
-if args.profile and MPI.COMM_WORLD.rank == 0:
+if args.profile and rank == 0:
     job_id = ""
     if "SLURM_JOB_ID" in os.environ:
         job_id = int(os.environ["SLURM_JOB_ID"])
