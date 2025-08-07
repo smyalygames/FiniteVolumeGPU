@@ -45,6 +45,8 @@ parser.add_argument('-nx', type=int, default=128)
 parser.add_argument('-ny', type=int, default=128)
 parser.add_argument('--profile', action='store_true')  # default: False
 parser.add_argument('--compile_opts', type=str, help="Compiler options for HIP code.")
+parser.add_argument('--progress', type=bool, default=False,
+                    help="Displays a progress bar for the progress of the simulation.")
 
 args = parser.parse_args()
 
@@ -128,7 +130,6 @@ compile_opts = args.compile_opts
 if compile_opts is not None:
     arguments['compile_opts'] += compile_opts
 
-
 if args.profile:
     t_init_end = time.time()
     t_init = t_init_end - t_init_start
@@ -138,6 +139,7 @@ if args.profile:
 # Run simulation
 ####
 logger.info("Running simulation")
+
 
 # Helper function to create MPI simulator
 
@@ -149,7 +151,7 @@ def gen_sim(grid, **kwargs):
 
 
 outfile, sim_runner_profiling_data, sim_profiling_data = run_simulation(
-    gen_sim, arguments, outfile, save_times, save_var_names, dt)
+    gen_sim, arguments, outfile, save_times, save_var_names, dt, progress_bar=args.progress)
 
 # Move NetCDF4 file to a unique file, for the next run.
 if rank == 0:

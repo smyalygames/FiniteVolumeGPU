@@ -84,7 +84,7 @@ def to_json(in_dict, compressed=True):
     return json.dumps(out_dict)
 
 
-def run_simulation(simulator, simulator_args, outfile, save_times, save_var_names=[], dt=None):
+def run_simulation(simulator, simulator_args, outfile, save_times, save_var_names=[], dt=None, progress_bar=False):
     """
     Runs a simulation, and store output in a netcdf file. Stores the times given in
     save_times, and saves all the variables in list save_var_names. Elements in
@@ -181,7 +181,7 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
 
         profiling_data_sim_runner["end"]["t_sim_init"] = time.time()
 
-        with tqdm(total=save_times[-1], desc="Simulation progress", unit="sim s") as pbar:
+        with tqdm(total=save_times[-1], desc="Simulation progress", unit="sim s", disable=not progress_bar) as pbar:
             # Start simulation loop
             for save_step, t_step in enumerate(t_steps):
                 t_end = save_step
