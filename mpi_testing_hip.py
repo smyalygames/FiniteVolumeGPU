@@ -45,7 +45,7 @@ parser.add_argument('-nx', type=int, default=128)
 parser.add_argument('-ny', type=int, default=128)
 parser.add_argument('--profile', action='store_true')  # default: False
 parser.add_argument('--compile_opts', type=str, help="Compiler options for HIP code.")
-parser.add_argument('--progress', type=bool, default=False,
+parser.add_argument('--progress', action='store_true',
                     help="Displays a progress bar for the progress of the simulation.")
 
 args = parser.parse_args()
@@ -116,7 +116,7 @@ gamma = 1.4
 # save_times = np.linspace(0, 0.000009, 2)
 # save_times = np.linspace(0, 0.000099, 11)
 # save_times = np.linspace(0, 0.000099, 2)
-save_times = np.linspace(0, 5, 21)
+save_times = np.linspace(0, 0.1, 5)
 outfile = "mpi_out.nc4"
 save_var_names = ['rho', 'rho_u', 'rho_v', 'E']
 
