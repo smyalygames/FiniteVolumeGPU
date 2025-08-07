@@ -158,8 +158,9 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
         ncvars['time'][:] = save_times
         ncvars['time'].units = "s"
         x0, x1, y0, y1 = sim.get_extent()
-        ncvars['x'][grid_x0:grid_x1] = np.linspace(x0, x1, simulator_args['nx'])
-        ncvars['y'][grid_y0:grid_y1] = np.linspace(y0, y1, simulator_args['ny'])
+
+        ncvars['x'][grid_x0:grid_x1] = np.linspace(grid_x0, grid_x1-1, simulator_args['nx'])
+        ncvars['y'][grid_y0:grid_y1] = np.linspace(grid_y0, grid_y1-1, simulator_args['ny'])
 
         # Choose which variables to download (prune None from the list, but keep the index)
         download_vars = []
@@ -208,7 +209,7 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
 
                 # Save to file
                 for i, var_name in enumerate(save_var_names):
-                    ncvars[var_name][save_step, grid_y0:grid_y1] = save_vars[i]
+                    ncvars[var_name][save_step, grid_y0:grid_y1, grid_x0:grid_x1] = save_vars[i]
 
                 profiling_data_sim_runner["end"]["t_nc_write"] += time.time()
 

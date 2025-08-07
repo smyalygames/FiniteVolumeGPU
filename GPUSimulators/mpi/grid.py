@@ -88,18 +88,22 @@ class MPIGrid(object):
         if comm.size < 1:
             raise ValueError("Must have at least one node")
 
-        grid = get_grid(comm.size, ndims)
-        self.x = grid[0]
-        self.y = grid[1]
-        self.x0 = nx * (self.x-1)
-        self.x1 = self.x0 + nx
-        self.y0 = ny * (self.y-1)
-        self.y1 = self.y0 + ny
+        grid_x, grid_y = get_grid(comm.size, ndims)
+        self.x = grid_x
+        self.y = grid_y
+
 
         self.comm = comm
 
+        x, y = self.get_coordinate()
+
+        self.x0 = nx * x
+        self.x1 = self.x0 + nx
+        self.y0 = ny * y
+        self.y1 = self.y0 + ny
+
         self.logger.debug(
-            f"Created MPI grid: {grid}. Rank {self.comm.rank} has coordinate {self.get_coordinate()}")
+            f"Created MPI grid: ({grid_x}, {grid_y}). Rank {self.comm.rank} has coordinate: ({x}, {y})")
 
     def get_coordinate(self, rank=None):
         if rank is None:
