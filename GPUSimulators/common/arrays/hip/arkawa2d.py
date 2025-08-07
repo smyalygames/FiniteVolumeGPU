@@ -1,3 +1,5 @@
+import ctypes
+
 import numpy as np
 from hip import hip, hipblas
 
@@ -13,18 +15,34 @@ def _sum_array(array: HIPArray2D):
         array: A HIPArray2D to compute the sum of.
     """
     result_h = np.zeros(1, dtype=array.dtype)
-    num_bytes = result_h.size * result_h.itemsize
+    num_bytes = result_h.strides[0]
     result_d = hip_check(hip.hipMalloc(num_bytes))
 
     # Sum the ``data_h`` array using hipblas
     handle = hip_check(hipblas.hipblasCreate())
-    hip_check(hipblas.hipblasSasum(handle, array.num_bytes, array.data, 1, result_d))
-    hip_check(hipblas.hipblasDestroy(handle))
+
+    # Using pitched memory, so we need to sum row by row
+    total_sum_d = hip_check(hip.hipMalloc(num_bytes))
+    hip_check(hip.hipMemset(total_sum_d, 0, num_bytes))
+
+    width, height = array.shape
+
+    for y in range(height):
+        row_ptr = int(array.data) + y * array.pitch_d
+
+        hip_check(hipblas.hipblasSasum(handle, width, row_ptr, 1, result_d))
+
+        hip_check(hipblas.hipblasSaxpy(handle, 1, ctypes.c_float(1.0), result_d, 1, total_sum_d, 1))
+
+        hip_check(hip.hipMemcpy(result_h, total_sum_d, num_bytes, hip.hipMemcpyKind.hipMemcpyDeviceToHost))
 
     # Copy over the result from the device
-    hip_check(hip.hipMemcpy(result_h, result_d, num_bytes, hip.hipMemcpyKind.hipMemcpyDeviceToHost))
+    hip_check(hip.hipMemcpy(result_h, total_sum_d, num_bytes, hip.hipMemcpyKind.hipMemcpyDeviceToHost))
 
+    # Cleanup
+    hip_check(hipblas.hipblasDestroy(handle))
     hip_check(hip.hipFree(result_d))
+    hip_check(hip.hipFree(total_sum_d))
 
     return result_h
 

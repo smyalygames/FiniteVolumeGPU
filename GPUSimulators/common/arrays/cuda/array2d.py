@@ -109,5 +109,8 @@ class CudaArray2D(BaseArray2D):
 
         copy(stream)
 
-    def get_strides(self) -> tuple[int, ...]:
+    def get_strides(self) -> tuple[int, int]:
         return self.data.strides[0]
+
+    def get_pitch(self) -> int:
+        return self.data.strides[0][0]

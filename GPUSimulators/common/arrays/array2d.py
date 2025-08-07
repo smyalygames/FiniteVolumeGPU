@@ -46,6 +46,12 @@ class BaseArray2D(object):
         """
         raise NotImplementedError("This function needs to be implemented in a subclass.")
 
+    def get_pitch(self) -> int:
+        """
+        Gets the number of bytes it takes to move to the next row.
+        """
+        raise NotImplementedError("This function needs to be implemented in a subclass.")
+
     def check(self, x, y, nx, ny, cpu_data):
         if nx != cpu_data.shape[1]:
             raise ValueError
