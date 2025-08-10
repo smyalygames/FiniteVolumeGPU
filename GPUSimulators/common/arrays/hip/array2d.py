@@ -39,10 +39,6 @@ class HIPArray2D(BaseArray2D):
 
         self.data, self.pitch_d = hip_check(hip.hipMallocPitch(self.width, self.height))
 
-        # TODO fix hipMallocPitch and remove this
-        # self.pitch_d = self.width
-        # self.data = hip_check(hip.hipMalloc(self.width * self.height))
-
         # Initialise the memory with an array of zeros.
         init_h = np.zeros(self.shape, self.dtype)
         self.pitch_h = shape_x * init_h.itemsize
