@@ -110,7 +110,7 @@ class CudaContext(Context):
     def get_module(self, kernel_filename: str,
                    function: str,
                    include_dirs: dict = None,
-                   defines: dict[str: dict] = None,
+                   defines: dict[str, dict] = None,
                    compile_args: dict = None,
                    jit_compile_args: dict = None) -> cuda.Module:
         """
