@@ -185,6 +185,7 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
         with tqdm(total=save_times[-1], desc="Simulation progress", unit="sim s", disable=not progress_bar) as pbar:
             # Start simulation loop
             for save_step, t_step in enumerate(t_steps):
+                logger.debug(f"Starting step: {save_step}.")
                 t_end = save_step
 
                 # Sanity check simulator
@@ -197,8 +198,10 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
                 profiling_data_sim_runner["start"]["t_full_step"] += time.time()
 
                 # Simulate
+                logger.debug(f"Simulating for {t_step} s.")
                 if t_step > 0.0:
                     sim.simulate(t_step, dt, pbar=pbar)
+                logger.debug(f"Completed simulation of {t_step} s.")
 
                 profiling_data_sim_runner["end"]["t_full_step"] += time.time()
 
@@ -208,8 +211,11 @@ def run_simulation(simulator, simulator_args, outfile, save_times, save_var_name
                 save_vars = sim.download(download_vars)
 
                 # Save to file
+                logger.debug(f"Saving step [{save_step}] to netCDF.")
                 for i, var_name in enumerate(save_var_names):
+                    logger.debug(f"Saving {var_name} ({grid_x0}:{grid_x1}, {grid_y0}:{grid_y1}) to netCDF.")
                     ncvars[var_name][save_step, grid_y0:grid_y1, grid_x0:grid_x1] = save_vars[i]
+                logger.debug(f"Saved step [{save_step}].")
 
                 profiling_data_sim_runner["end"]["t_nc_write"] += time.time()
 
