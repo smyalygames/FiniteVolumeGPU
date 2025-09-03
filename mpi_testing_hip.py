@@ -116,7 +116,7 @@ gamma = 1.4
 # save_times = np.linspace(0, 0.000009, 2)
 # save_times = np.linspace(0, 0.000099, 11)
 # save_times = np.linspace(0, 0.000099, 2)
-save_times = np.linspace(0, 0.1, 5)
+save_times = np.linspace(0, 1, 21)
 outfile = "mpi_out.nc4"
 save_var_names = ['rho', 'rho_u', 'rho_v', 'E']
 
