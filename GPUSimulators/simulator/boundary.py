@@ -42,7 +42,7 @@ class BoundaryCondition(object):
         Periodic = 2,
         Reflective = 3
 
-    def __init__(self, types: dict[str: Type.Reflective]=None):
+    def __init__(self, types: dict[str, Type]=None):
         """
         Constructor
         """

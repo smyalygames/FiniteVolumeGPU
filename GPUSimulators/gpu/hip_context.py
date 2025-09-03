@@ -64,8 +64,8 @@ class HIPContext(Context):
     def get_module(self, kernel_filename: str,
                    function: str,
                    include_dirs: list[str] = None,
-                   defines: dict[str: int] = None,
-                   compile_args: dict[str: list] = None,
+                   defines: dict[str, int] = None,
+                   compile_args: dict[str, list] = None,
                    jit_compile_args: dict = None):
         """
         Reads a ``.hip`` file and creates a HIP kernel from that.

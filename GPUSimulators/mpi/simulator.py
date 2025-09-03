@@ -80,16 +80,16 @@ class BaseMPISimulator(BaseSimulator):
         })
         gi, gj = grid.get_coordinate()
         # print("gi: " + str(gi) + ", gj: " + str(gj))
-        if gi == 0 and boundary_conditions.west != BoundaryCondition.Type.Periodic:
+        if (gi == 0 and boundary_conditions.west != BoundaryCondition.Type.Periodic):
             self.west = None
             new_boundary_conditions.west = boundary_conditions.west
-        if gj == 0 and boundary_conditions.south != BoundaryCondition.Type.Periodic:
+        if (gj == 0 and boundary_conditions.south != BoundaryCondition.Type.Periodic):
             self.south = None
             new_boundary_conditions.south = boundary_conditions.south
-        if gi == grid.x - 1 and boundary_conditions.east != BoundaryCondition.Type.Periodic:
+        if (gi == grid.x - 1 and boundary_conditions.east != BoundaryCondition.Type.Periodic):
             self.east = None
             new_boundary_conditions.east = boundary_conditions.east
-        if gj == grid.y - 1 and boundary_conditions.north != BoundaryCondition.Type.Periodic:
+        if (gj == grid.y - 1 and boundary_conditions.north != BoundaryCondition.Type.Periodic):
             self.north = None
             new_boundary_conditions.north = boundary_conditions.north
         sim.set_boundary_conditions(new_boundary_conditions)
