@@ -104,7 +104,7 @@ class BaseSimulator(object):
             self.dt = dt
 
         if tolerance is None:
-            tolerance = 0.000000001
+            tolerance = 0.00001
 
         while self.sim_time() < t_end:
             # Prevent an infinite loop from occurring from tiny numbers
